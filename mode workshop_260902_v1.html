@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MODE Action Planning Workshop</title>
+<style>
+:root{
+  --bg:#0A0A0A; --panel:#141414; --panel2:#1C1C1C; --panel3:#252525;
+  --line:#303030; --gold:#FFD200; --goldd:#8A7100;
+  --white:#F0F0F0; --grey:#C9C9C9; --dim:#8E8E8E;
+  --qw:#3FB950; --mp:#4C9AFF; --fi:#B8B8B8; --rc:#FFD200;
+  --red:#E8533F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--white);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",-apple-system,sans-serif;
+  line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+
+/* ── top bar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;background:rgba(10,10,10,.97);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:12px 26px;
+}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.brand b{color:var(--gold)}
+.navtabs{display:flex;gap:6px;margin-left:8px}
+.navtab{
+  background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.navtab.on{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.navtab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.spacer{flex:1}
+.timer{
+  display:flex;align-items:center;gap:10px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:8px;padding:6px 12px;
+}
+.tdisp{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--gold);min-width:62px;text-align:center;letter-spacing:.02em}
+.tdisp.warn{color:var(--red)}
+.tbtn{background:none;border:1px solid var(--line);color:var(--grey);
+  width:28px;height:26px;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── layout ── */
+.view{display:none;padding:26px}
+.view.on{display:block}
+.wide{max-width:1600px;margin:0 auto}
+
+h2.vt{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.vsub{font-size:14px;color:var(--dim);margin-bottom:22px}
+
+/* ── PART 1 : issue grid ── */
+.axisrow{margin-bottom:18px}
+.axishead{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.ptag{background:var(--gold);color:#0A0A0A;font-weight:800;font-size:11px;
+  padding:3px 9px;border-radius:4px}
+.axisname{font-size:14px;font-weight:700}
+.axissub{font-size:12px;color:var(--dim)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:9px}
+.icard{
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:13px 15px;cursor:pointer;transition:.15s;position:relative;
+}
+.icard:hover{border-color:var(--goldd)}
+.icard.focus{border-color:var(--gold);background:#1E1900}
+.icard .inum{font-size:11px;font-weight:800;color:var(--dim);
+  font-variant-numeric:tabular-nums}
+.icard .ittl{font-size:13.5px;font-weight:600;margin-top:3px;line-height:1.4}
+.icard .ibar{display:flex;gap:2px;margin-top:9px;height:5px;border-radius:3px;overflow:hidden}
+.icard .ibar i{display:block;height:100%}
+.icard .imeta{font-size:10.5px;color:var(--dim);margin-top:6px;
+  display:flex;justify-content:space-between}
+.statechip{position:absolute;top:11px;right:12px;font-size:9.5px;font-weight:800;
+  padding:2px 7px;border-radius:10px;letter-spacing:.03em}
+.st-agree{background:#14361B;color:var(--qw)}
+.st-split{background:#3A2E00;color:var(--gold)}
+.st-later{background:var(--panel3);color:var(--dim)}
+
+/* ── PART 2 : deep dive ── */
+.dd{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+.ddleft{position:sticky;top:78px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:18px 20px;margin-bottom:14px}
+.panel h3{font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.06em;
+  margin-bottom:12px;text-transform:uppercase}
+
+.qnav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.qchip{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  width:34px;height:32px;border-radius:6px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:inherit}
+.qchip.on{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.qchip.done{border-color:var(--qw);color:var(--qw)}
+
+.ddtitle{font-size:22px;font-weight:800;line-height:1.35;margin-bottom:8px}
+.dddesc{font-size:13.5px;color:var(--grey);line-height:1.6;
+  padding-left:12px;border-left:2px solid var(--panel3);margin-bottom:18px}
+
+/* distribution */
+.distrow{display:flex;gap:8px;margin-bottom:14px}
+.dcell{flex:1;background:var(--panel2);border:1px solid var(--line);
+  border-radius:8px;padding:10px 11px;text-align:center}
+.dcell .dn{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.dcell .dl{font-size:10px;font-weight:700;margin-top:2px;letter-spacing:.02em}
+.dcell.qw .dn,.dcell.qw .dl{color:var(--qw)}
+.dcell.mp .dn,.dcell.mp .dl{color:var(--mp)}
+.dcell.fi .dn,.dcell.fi .dl{color:var(--fi)}
+.dcell.rc .dn,.dcell.rc .dl{color:var(--rc)}
+
+.opinions{max-height:340px;overflow-y:auto}
+.opin{padding:9px 0;border-bottom:1px solid var(--line)}
+.opin:last-child{border:none}
+.opin .oh{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.opin .oname{font-size:12px;font-weight:700}
+.opin .oq{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:8px}
+.oq.QW{background:#14361B;color:var(--qw)} .oq.MP{background:#122A47;color:var(--mp)}
+.oq.FI{background:#2A2A2A;color:var(--fi)} .oq.RC{background:#3A2E00;color:var(--rc)}
+.opin .otx{font-size:12px;color:var(--grey);line-height:1.5}
+
+/* consensus picker */
+.qpick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qp{background:var(--panel2);border:2px solid var(--line);border-radius:9px;
+  padding:14px;cursor:pointer;font-family:inherit;text-align:center;transition:.15s}
+.qp:hover{border-color:var(--goldd)}
+.qp .qpn{font-size:13px;font-weight:800;color:var(--white);display:block}
+.qp .qpd{font-size:10.5px;color:var(--dim);margin-top:3px;display:block}
+.qp.sel[data-q=QW]{background:var(--qw);border-color:var(--qw)}
+.qp.sel[data-q=MP]{background:var(--mp);border-color:var(--mp)}
+.qp.sel[data-q=FI]{background:var(--fi);border-color:var(--fi)}
+.qp.sel[data-q=RC]{background:var(--rc);border-color:var(--rc)}
+.qp.sel .qpn,.qp.sel .qpd{color:#0A0A0A}
+
+/* ── why tree (horizontal) ── */
+.treewrap{overflow-x:auto;padding:6px 2px 12px}
+.tree{display:flex;align-items:flex-start;gap:0;min-width:min-content}
+.tcol{display:flex;flex-direction:column;justify-content:center;gap:10px}
+.tnode{
+  background:var(--panel2);border:1.5px solid var(--line);border-radius:8px;
+  padding:10px 13px;min-width:190px;max-width:230px;position:relative;
+}
+.tnode.root{border-color:var(--red);background:#1A0806}
+.tnode.core{border-color:var(--red);background:#2A0A06;box-shadow:0 0 0 2px rgba(232,83,63,.18)}
+.tnode .ttx{font-size:12.5px;font-weight:600;line-height:1.4;
+  outline:none;min-height:18px}
+.tnode .ttx:focus{color:var(--gold)}
+.tnode .tacts{display:flex;gap:5px;margin-top:8px;opacity:.55}
+.tnode:hover .tacts{opacity:1}
+.tact{background:none;border:1px solid var(--line);color:var(--dim);
+  font-size:10px;padding:2px 7px;border-radius:5px;cursor:pointer;font-family:inherit}
+.tact:hover{border-color:var(--gold);color:var(--gold)}
+.tact.mark:hover{border-color:var(--red);color:var(--red)}
+.tconn{width:34px;align-self:stretch;position:relative;flex-shrink:0;min-height:60px}
+.tconn svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* initiatives */
+.inits{width:100%;border-collapse:collapse}
+.inits th{font-size:10.5px;font-weight:800;color:var(--gold);text-align:left;
+  padding:7px 9px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.inits td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.inits input,.inits select{
+  width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--white);
+  padding:8px 10px;border-radius:6px;font-size:12.5px;font-family:inherit}
+.inits input:focus,.inits select:focus{outline:2px solid var(--gold);outline-offset:0;border-color:transparent}
+.rmb{background:none;border:none;color:var(--dim);cursor:pointer;font-size:15px;padding:2px 6px}
+.rmb:hover{color:var(--red)}
+.addb{background:var(--panel2);border:1px dashed var(--line);color:var(--grey);
+  padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;margin-top:10px}
+.addb:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── PART 3 ── */
+.sumtable{width:100%;border-collapse:collapse;font-size:13px}
+.sumtable th{font-size:11px;font-weight:800;color:var(--gold);text-align:left;
+  padding:9px 11px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.sumtable td{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+.tagchip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;
+  background:var(--panel3);color:var(--grey);white-space:nowrap}
+.qbadge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px}
+.stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:14px 20px;min-width:130px}
+.stat .sn{font-size:28px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat .sl{font-size:11.5px;color:var(--dim);margin-top:2px}
+
+.exportbar{display:flex;gap:9px;margin-top:20px}
+.ebtn{background:var(--gold);color:#0A0A0A;border:none;padding:11px 22px;
+  border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
+.ebtn.ghost{background:none;border:1px solid var(--line);color:var(--grey)}
+.ebtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+.empty{color:var(--dim);font-size:13px;padding:26px 0;text-align:center;font-style:italic}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><b>MODE</b> Action Planning</div>
+  <div class="navtabs">
+    <button class="navtab on" data-view="v1">1 · 전체 조망</button>
+    <button class="navtab" data-view="v2">2 · 심층 논의</button>
+    <button class="navtab" data-view="v3">3 · 정리</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="timer">
+    <button class="tbtn" id="tMinus">−</button>
+    <span class="tdisp" id="tDisp">24:00</span>
+    <button class="tbtn" id="tPlus">+</button>
+    <button class="tbtn" id="tPlay">▶</button>
+    <button class="tbtn" id="tReset">↺</button>
+  </div>
+</div>
+
+<!-- ══════ PART 1 ══════ -->
+<div class="view on" id="v1">
+  <div class="wide">
+    <h2 class="vt">진단에서 도출된 16개 문제</h2>
+    <p class="vsub">사전 검토 결과에 따라 합의·분산·후순위로 분류되었습니다. 카드를 클릭하면 심층 논의로 이동합니다.</p>
+    <div class="stats" id="p1stats"></div>
+    <div id="issueGrid"></div>
+  </div>
+</div>
+
+<!-- ══════ PART 2 ══════ -->
+<div class="view" id="v2">
+  <div class="wide">
+    <div class="qnav" id="qnav"></div>
+    <div class="dd">
+      <div class="ddleft">
+        <div class="panel">
+          <h3>사전 응답 분포</h3>
+          <div class="distrow" id="distRow"></div>
+          <h3 style="margin-top:16px">리더 의견</h3>
+          <div class="opinions" id="opinList"></div>
+        </div>
+      </div>
+      <div class="ddright">
+        <div class="panel">
+          <div class="ddtitle" id="ddTitle"></div>
+          <div class="dddesc" id="ddDesc"></div>
+          <h3>① 사분면 합의</h3>
+          <div class="qpick" id="qPick"></div>
+        </div>
+        <div class="panel">
+          <h3>② 근본 원인 — Why Tree</h3>
+          <div class="treewrap"><div class="tree" id="tree"></div></div>
+        </div>
+        <div class="panel">
+          <h3>③ 이니셔티브 &amp; 오너</h3>
+          <table class="inits"><thead><tr>
+            <th style="width:38%">이니셔티브</th><th style="width:18%">성격</th>
+            <th style="width:14%">시점</th><th style="width:22%">오너</th><th style="width:8%"></th>
+          </tr></thead><tbody id="initBody"></tbody></table>
+          <button class="addb" id="addInit">+ 이니셔티브 추가</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PART 3 ══════ -->
+<div class="view" id="v3">
+  <div class="wide">
+    <h2 class="vt">도출된 이니셔티브</h2>
+    <p class="vsub">오늘 논의에서 합의된 실행 과제와 후속 딥다이브 대상입니다.</p>
+    <div class="stats" id="p3stats"></div>
+    <div class="panel">
+      <h3>실행 과제</h3>
+      <table class="sumtable"><thead><tr>
+        <th style="width:5%">#</th><th style="width:28%">이니셔티브</th>
+        <th style="width:22%">출처 문제</th><th style="width:13%">성격</th>
+        <th style="width:11%">시점</th><th style="width:21%">오너</th>
+      </tr></thead><tbody id="sumBody"></tbody></table>
+    </div>
+    <div class="panel">
+      <h3>후속 딥다이브 대상</h3>
+      <table class="sumtable"><thead><tr>
+        <th style="width:6%">#</th><th style="width:44%">문제</th>
+        <th style="width:16%">합의 사분면</th><th style="width:34%">비고</th>
+      </tr></thead><tbody id="laterBody"></tbody></table>
+    </div>
+    <div class="exportbar">
+      <button class="ebtn" id="expJson">결과 저장 (JSON)</button>
+      <button class="ebtn ghost" id="expCsv">이니셔티브 CSV</button>
+      <button class="ebtn ghost" id="loadJson">불러오기</button>
+      <input type="file" id="fileIn" accept=".json" style="display:none">
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════ ISSUES (사전과제와 동일) ══════════ */
+const ISSUES = [
+ {n:1,ax:"P1",sec:"시간 배분",t:"체감–실제 근무시간 격차",
+  d:"기록된 근무시간보다 구성원이 체감하는 업무량이 더 큽니다. 마케팅 전체에서 이 격차가 나타나며, 조직마다 크기가 다릅니다."},
+ {n:2,ax:"P1",sec:"시간 배분",t:"일부 조직의 장시간 근무",
+  d:"특정 조직에서 근무시간이 뚜렷하게 길게 나타납니다."},
+ {n:3,ax:"P1",sec:"시간 배분",t:"일부 조직의 단시간 근무 (주 40시간 미만)",
+  d:"기록된 근무시간이 주 40시간에 못 미치는 조직도 있습니다. 업무 배분·업무 성격·기록 정확도 중 무엇인지 팀별 검토가 필요합니다."},
+ {n:4,ax:"P1",sec:"시간 배분",t:"보고자료 준비·운영 등 Low value work에 시간 잠식",
+  d:"보고자료 제작과 운영·행정 업무가 전체 시간의 상당 부분을 차지합니다. 그만큼 전략과 분석에 쓸 시간이 줄어듭니다."},
+ {n:5,ax:"P1",sec:"시간 배분",t:"팀 리더의 피플 매니지먼트 시간 부족",
+  d:"팀 리더가 구성원 관리와 육성에 쓰는 시간의 비중이 매우 낮습니다. 리더 역시 보고·운영 업무에 시간을 쓰고 있는 구조입니다."},
+ {n:6,ax:"P2",sec:"우선순위 정합",t:"팀장–팀원의 Work Priority 불일치",
+  d:"같은 업무를 두고 팀장과 팀원의 인식이 어긋납니다. 무엇이 중요한지는 대체로 일치하지만, 얼마나 힘든지에 대한 인식 차이가 큽니다."},
+ {n:7,ax:"P2",sec:"우선순위 정합",t:"평균 대비 Work Priority 일치율이 극단적으로 낮은 팀 집중",
+  d:"평균 대비 일치율이 극단적으로 낮은 팀에 대한 명확한 진단 및 개선사항 도출이 필요합니다."},
+ {n:8,ax:"P3",sec:"조직 병목",t:"업무에 도움이 되지 않는 조직의 공식 프로세스",
+  d:"보고 체계, 승인 단계, 업무 프로세스 등 공식 구조가 효율적인 업무 수행을 오히려 방해합니다. 조직효과성 6개 항목 중 가장 낮은 점수 영역입니다."},
+ {n:9,ax:"P3",sec:"조직 병목",t:"개인의 동기를 부여하지 못하는 조직문화",
+  d:"조직의 문화와 관행이 구성원의 동기 유지와 에너지에 긍정적인 영향을 주지 못합니다. 의사결정 방식과 소통 관행이 주로 지적되었습니다."},
+ {n:10,ax:"P3",sec:"조직 병목",t:"의사결정 번복 빈번",
+  d:"결정이 내려진 뒤 다시 뒤집히는 일이 반복됩니다. 거의 모든 부문의 주관식 응답에 등장한 가장 광범위한 동기 저하 요인입니다."},
+ {n:11,ax:"P3",sec:"조직 병목",t:"조직효과성 점수가 평균 대비 극단적으로 낮은 팀 집중",
+  d:"조직효과성 점수 역시 팀별 편차가 큽니다. 특정 팀에 병목이 집중되어 있습니다."},
+ {n:12,ax:"P4",sec:"현장 목소리",t:"승인·구매 프로세스 복잡",
+  d:"비용 처리와 구매 절차, 다단계 결재의 복잡성이 여러 조직에서 반복적으로 지적되었습니다."},
+ {n:13,ax:"P4",sec:"현장 목소리",t:"R&R 불명확",
+  d:"부서 간 역할과 책임의 경계가 명확하지 않습니다. 같은 업무에 여러 요청 경로가 존재하거나, 기준이 부서마다 다릅니다."},
+ {n:14,ax:"P4",sec:"현장 목소리",t:"온보딩 부재",
+  d:"신규 입사자를 위한 온보딩과 교육 체계가 부족합니다. 산업·제품 이해와 업무 매뉴얼의 부재가 함께 지적되었습니다."},
+ {n:15,ax:"P4",sec:"현장 목소리",t:"AI 활용이 제한되어 반복업무에 시간 소모",
+  d:"AI 도구 접근이 제한되어 있습니다. 데이터 정리와 보고서 초안 작성처럼 AI로 처리 가능한 반복업무에 시간을 쓰고 있다는 의견이 많습니다."},
+ {n:16,ax:"P4",sec:"현장 목소리",t:"잦은 미팅",
+  d:"정기 미팅과 애드혹 미팅이 많고, 참석자와 아젠다가 중복되는 경우가 있습니다."}
+];
+
+const QUADS={
+  QW:{name:"QUICK WIN",desc:"효과 큼 · 수월",color:"var(--qw)"},
+  MP:{name:"MAJOR PROJECT",desc:"효과 큼 · 부담 큼",color:"var(--mp)"},
+  FI:{name:"FILL-IN",desc:"효과 작음 · 수월",color:"var(--fi)"},
+  RC:{name:"RECONSIDER",desc:"효과 작음 · 부담 큼",color:"var(--rc)"}
+};
+const TYPES=["AI Application","Elimination / Consolidation","R&R Realignment",
+             "Process Redesign","Org Structure Redesign"];
+const TIMING=["Quick Win (~90일)","중기 (~6개월)","장기 (12개월+)"];
+
+/* ══════════ 사전과제 응답 (취합 후 여기에 입력) ══════════
+   형식: PRE[문항번호] = [{name:"이름", q:"QW|MP|FI|RC", memo:"한 줄 요약"}, ...]
+   ─ 현재는 응답 완료된 2명분만 입력되어 있습니다. */
+const PRE = {
+ 1:[{name:"심교선",q:"FI",memo:"업무 Intensity가 높아 체감이 큼. SI&I는 월 3~4회 GHQ 세션이 근무로 인식되는 경우도"},
+    {name:"Wongi Ryu",q:"FI",memo:"촬영·외부 파트너 미팅 등 사무실 밖 업무와 재택 근무가 기록에 안 잡힘"}],
+ 2:[{name:"심교선",q:"MP",memo:"상대적 비교로 장기적 악영향. GHQ 업무·계획 외 스콥 때문이라면 전사 WoW 필요하나 쉽지 않음"},
+    {name:"Wongi Ryu",q:"MP",memo:"헤드카운트 대비 인력 부족이 원인으로 추정. 채용이 필요해 어려움. 팀별 원인이 같은지 딥다이브 필요"}],
+ 3:[{name:"심교선",q:"FI",memo:"해결은 쉬움. 근태 불량자에 명확한 상벌·가이드 필요. 다만 효과는 크지 않음"},
+    {name:"Wongi Ryu",q:"FI",memo:"업무량은 많으나 현장·재택 비중이 큼. 다만 40시간은 회사 규정이니 준수하도록 커뮤니케이션"}],
+ 4:[{name:"심교선",q:"MP",memo:"모든 보고자료가 Low value는 아님. 여러 팀 협업 구조상 컨텍스트 설명이 길어질 수밖에 없음"},
+    {name:"Wongi Ryu",q:"MP",memo:"의사결정 지원 목적. 리더와 불필요 보고 축소에 합의하면 전체 업무 부담이 크게 줄 것"}],
+ 5:[{name:"심교선",q:"FI",memo:"People management 정의가 모호. 업무는 하면서 배우는 것이고, 그때그때 매니저에게 묻는 문화가 우선"},
+    {name:"Wongi Ryu",q:"MP",memo:"팀이 작아 리더가 실무에 투입되는 구조적 한계. 리더 대상 피플매니지먼트 교육이 지속 필요"}],
+ 6:[{name:"심교선",q:"MP",memo:"팀장과 팀원의 업무 스콥 차이에서 오는 자연스러운 현상. 불일치를 무조건 나쁘게 보는 건 잘못"},
+    {name:"Wongi Ryu",q:"QW",memo:"리드가 의도와 맥락을 명확히 전달하면 큰 문제 없음. 갭이 있으면 1:1로 기대치 정렬"}],
+ 7:[{name:"심교선",q:"MP",memo:"위와 동일 — 스콥 차이에 따른 구조적 현상"},
+    {name:"Wongi Ryu",q:"QW",memo:"리더-팀원 간 소통 빈도의 문제. 맥락·목적·우선순위를 명확히 주면 해결되고 효율이 크게 오름"}],
+ 8:[{name:"심교선",q:"MP",memo:"프로세스가 없는 게 아니라 디테일·현실성의 문제. 예외가 반복되면 따라야 할지 혼동이 생김"},
+    {name:"Wongi Ryu",q:"MP",memo:"상위 리더는 더 적고 중요한 결정만, 하위는 작은 결정을 맡는 구조가 오너십과 속도를 만듦"}],
+ 9:[{name:"심교선",q:"MP",memo:"동기부여는 개인이 드라이브해야. 문화 변화도 중요하나 단기·장기 구분 필요"},
+    {name:"Wongi Ryu",q:"QW",memo:"결정권자가 원하는 바를 명확히 말하고 경청하며 신뢰를 쌓으면 됨. 개념은 단순하나 실천이 어려움"}],
+ 10:[{name:"심교선",q:"RC",memo:"최종 결정인지 중간 결정인지 확인 필요. 동기 저하는 있으나 비즈니스상 피할 수 없고 변화도 어려움"},
+     {name:"Wongi Ryu",q:"MP",memo:"리더의 의사결정 범위 정의 문제. 권한과 신뢰의 문제이며 위임하면 번복이 자연히 줄어듦"}],
+ 11:[{name:"심교선",q:"MP",memo:"팀장과 상위 매니저 간 소통 부재, Initiative 목적 부재. Team-MLT-MANCOM-Global 간 얼라인먼트 부재가 원인"},
+     {name:"Wongi Ryu",q:"QW",memo:"비핵심 업무의 우선순위 정리가 핵심. R&R을 명확히 하면 특정 팀에 업무가 몰리는 것을 막을 수 있음"}],
+ 12:[{name:"심교선",q:"RC",memo:"내부 컴플라이언스 이슈. 익숙한 사람과 아닌 사람의 갭이 큼. 내부 절차 변경엔 한계가 뚜렷"},
+     {name:"Wongi Ryu",q:"MP",memo:"단기간 시스템 개편은 어렵지만, 해낸다면 엄청난 운영 효율을 만들 것"}],
+ 13:[{name:"심교선",q:"MP",memo:"최근 몇 년간 구조가 여러 번 바뀌었으나 명확한 R&R 없이 구조가 만들어진 경우가 있음"},
+     {name:"Wongi Ryu",q:"QW",memo:"리더십 레벨에서 다룰 문제. 회색지대 업무를 리스트업해 관련 리더와 논의하면 정리 가능"}],
+ 14:[{name:"심교선",q:"FI",memo:"온보딩 교육·인덕션은 잘 이루어짐. 다만 배경지식 없이 들으면 이해가 어려움. 팀 내 정기 교육이 도움"},
+     {name:"Wongi Ryu",q:"QW",memo:"전 직장은 온보딩이 일주일. 팀장과 HR이 함께 구조화된 교육을 설계하면 해결 가능"}],
+ 15:[{name:"심교선",q:"RC",memo:"없는 것에 대한 답답함이 큼. Copilot 일부 활용 가능하나 수준이 낮음. 교육 필요하나 당장 해결은 어려움"},
+     {name:"Wongi Ryu",q:"QW",memo:"AI는 불가피한 흐름. 필수 도구 접근성 확보와 예산, 안전한 사용 문화를 위한 교육이 필요"}],
+ 16:[{name:"심교선",q:"RC",memo:"보고를 위한 보고가 얼마나 되는지 파악 필요. 팀장과 MLT가 미팅 목적을 명확히 하도록 교육 필요"},
+     {name:"Wongi Ryu",q:"MP",memo:"대면이 필요한 미팅과 서면으로 대체 가능한 것의 판단은 리더십의 몫. 불필요 미팅 정의에 노력이 필요"}]
+};
+
+/* ══════════ STATE ══════════ */
+const S = {
+  focus: 1,
+  consensus: {},      // n -> quadId
+  trees: {},          // n -> [{id,parent,text,core}]
+  inits: {},          // n -> [{text,type,timing,owner}]
+  status: {}          // n -> 'agree'|'split'|'later'  (자동계산 + 수동조정)
+};
+let uid = 1;
+
+/* 사전 응답으로 상태 자동 분류 */
+function classify(n){
+  const r = PRE[n]||[];
+  if(!r.length) return 'later';
+  const c={}; r.forEach(x=>c[x.q]=(c[x.q]||0)+1);
+  const top = Math.max(...Object.values(c));
+  const ratio = top / r.length;
+  if(ratio >= 0.75) return 'agree';
+  return 'split';
+}
+ISSUES.forEach(i=>{ S.status[i.n] = classify(i.n); });
+
+/* ══════════ NAV ══════════ */
+document.querySelectorAll('.navtab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.navtab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById(b.dataset.view).classList.add('on');
+    if(b.dataset.view==='v3') renderP3();
+    if(b.dataset.view==='v1') renderP1();
+    window.scrollTo(0,0);
+  });
+});
+function goto(view){ document.querySelector(`.navtab[data-view=${view}]`).click(); }
+
+/* ══════════ TIMER ══════════ */
+let tSec=24*60, tOn=false, tInt=null;
+function tRender(){
+  const m=String(Math.floor(Math.abs(tSec)/60)).padStart(2,'0');
+  const s=String(Math.abs(tSec)%60).padStart(2,'0');
+  const d=document.getElementById('tDisp');
+  d.textContent=(tSec<0?'-':'')+m+':'+s;
+  d.classList.toggle('warn', tSec<=60);
+}
+document.getElementById('tPlay').addEventListener('click',e=>{
+  tOn=!tOn; e.target.textContent = tOn?'❚❚':'▶';
+  if(tOn){ tInt=setInterval(()=>{tSec--;tRender();},1000); }
+  else clearInterval(tInt);
+});
+document.getElementById('tReset').addEventListener('click',()=>{
+  tSec=24*60; tRender();
+});
+document.getElementById('tPlus').addEventListener('click',()=>{tSec+=60;tRender();});
+document.getElementById('tMinus').addEventListener('click',()=>{tSec-=60;tRender();});
+tRender();
+
+/* ══════════ PART 1 ══════════ */
+function renderP1(){
+  const cnt={agree:0,split:0,later:0};
+  ISSUES.forEach(i=>cnt[S.status[i.n]]++);
+  document.getElementById('p1stats').innerHTML =
+    `<div class="stat"><div class="sn">${cnt.agree}</div><div class="sl">합의 — 빠른 확인</div></div>
+     <div class="stat"><div class="sn">${cnt.split}</div><div class="sl">분산 — 심층 논의</div></div>
+     <div class="stat"><div class="sn">${cnt.later}</div><div class="sl">후순위 — 딥다이브</div></div>
+     <div class="stat"><div class="sn">${Object.keys(S.consensus).length}</div><div class="sl">합의 완료</div></div>`;
+
+  const byAx={};
+  ISSUES.forEach(i=>{ (byAx[i.ax]=byAx[i.ax]||[]).push(i); });
+  const AXN={P1:"시간 배분",P2:"우선순위 정합",P3:"조직 병목",P4:"현장 목소리"};
+  const AXE={P1:"Time Allocation",P2:"Work Priority Alignment",P3:"Org Effectiveness",P4:"Voice of Employee"};
+
+  document.getElementById('issueGrid').innerHTML = Object.keys(byAx).map(ax=>`
+    <div class="axisrow">
+      <div class="axishead"><span class="ptag">${ax}</span>
+        <span class="axisname">${AXN[ax]}</span>
+        <span class="axissub">${AXE[ax]}</span></div>
+      <div class="igrid">${byAx[ax].map(i=>icard(i)).join('')}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.icard').forEach(c=>{
+    c.addEventListener('click',()=>{ S.focus=+c.dataset.n; renderP2(); goto('v2'); });
+  });
+}
+function icard(i){
+  const r=PRE[i.n]||[];
+  const c={QW:0,MP:0,FI:0,RC:0}; r.forEach(x=>c[x.q]++);
+  const tot=r.length||1;
+  const bar=['QW','MP','FI','RC'].map(k=>
+    c[k]?`<i style="width:${c[k]/tot*100}%;background:${QUADS[k].color}"></i>`:'').join('');
+  const st=S.status[i.n];
+  const stl={agree:'합의',split:'분산',later:'미응답'}[st];
+  const done=S.consensus[i.n];
+  return `<div class="icard ${S.focus===i.n?'focus':''}" data-n="${i.n}">
+    <span class="statechip st-${st}">${stl}</span>
+    <div class="inum">${String(i.n).padStart(2,'0')}</div>
+    <div class="ittl">${i.t}</div>
+    <div class="ibar">${bar||'<i style="width:100%;background:var(--panel3)"></i>'}</div>
+    <div class="imeta"><span>응답 ${r.length}명</span>
+      <span>${done?QUADS[done].name:'—'}</span></div>
+  </div>`;
+}
+
+/* ══════════ PART 2 ══════════ */
+function renderP2(){
+  const n=S.focus, iss=ISSUES.find(x=>x.n===n);
+
+  document.getElementById('qnav').innerHTML = ISSUES.map(i=>
+    `<button class="qchip ${i.n===n?'on':''} ${S.consensus[i.n]?'done':''}" data-n="${i.n}">${i.n}</button>`).join('');
+  document.querySelectorAll('.qchip').forEach(b=>b.addEventListener('click',()=>{
+    S.focus=+b.dataset.n; renderP2(); window.scrollTo(0,0);
+  }));
+
+  document.getElementById('ddTitle').textContent = `${String(n).padStart(2,'0')}. ${iss.t}`;
+  document.getElementById('ddDesc').textContent = iss.d;
+
+  // distribution
+  const r=PRE[n]||[]; const c={QW:0,MP:0,FI:0,RC:0}; r.forEach(x=>c[x.q]++);
+  document.getElementById('distRow').innerHTML = ['QW','MP','FI','RC'].map(k=>
+    `<div class="dcell ${k.toLowerCase()}"><div class="dn">${c[k]}</div>
+     <div class="dl">${QUADS[k].name.split(' ')[0]}</div></div>`).join('');
+
+  document.getElementById('opinList').innerHTML = r.length ? r.map(o=>
+    `<div class="opin"><div class="oh"><span class="oname">${o.name}</span>
+      <span class="oq ${o.q}">${QUADS[o.q].name}</span></div>
+     <div class="otx">${o.memo}</div></div>`).join('')
+    : '<div class="empty">아직 응답이 없습니다</div>';
+
+  // consensus picker
+  document.getElementById('qPick').innerHTML = ['QW','MP','FI','RC'].map(k=>
+    `<button class="qp ${S.consensus[n]===k?'sel':''}" data-q="${k}">
+      <span class="qpn">${QUADS[k].name}</span>
+      <span class="qpd">${QUADS[k].desc}</span></button>`).join('');
+  document.querySelectorAll('.qp').forEach(b=>b.addEventListener('click',()=>{
+    S.consensus[n]=b.dataset.q; renderP2();
+  }));
+
+  renderTree(); renderInits();
+}
+
+/* ── Why Tree ── */
+function tree(n){
+  if(!S.trees[n]) S.trees[n]=[{id:uid++,parent:null,text:ISSUES.find(x=>x.n===n).t,core:false}];
+  return S.trees[n];
+}
+function renderTree(){
+  const n=S.focus, nodes=tree(n);
+  // depth 계산
+  const depth={}; nodes.forEach(x=>{
+    let d=0,p=x.parent;
+    while(p!==null){ d++; p=nodes.find(y=>y.id===p)?.parent ?? null; }
+    depth[x.id]=d;
+  });
+  const maxD=Math.max(...Object.values(depth));
+  let html='';
+  for(let d=0; d<=maxD; d++){
+    const col=nodes.filter(x=>depth[x.id]===d);
+    if(d>0) html+=`<div class="tconn"><svg preserveAspectRatio="none" viewBox="0 0 34 100">
+      <path d="M0 50 H12 M12 8 V92 M12 8 H34 M12 50 H34 M12 92 H34" stroke="#5A5A5A" stroke-width="1.5" fill="none"/></svg></div>`;
+    html+=`<div class="tcol">`+col.map(x=>{
+      const isRoot = x.parent===null;
+      return `<div class="tnode ${isRoot?'root':''} ${x.core?'core':''}" data-id="${x.id}">
+        <div class="ttx" contenteditable="true" data-id="${x.id}">${x.text}</div>
+        <div class="tacts">
+          <button class="tact add" data-id="${x.id}">+ 원인</button>
+          ${isRoot?'':`<button class="tact mark" data-id="${x.id}">${x.core?'★ 핵심':'핵심 지정'}</button>
+          <button class="tact del" data-id="${x.id}">삭제</button>`}
+        </div></div>`;
+    }).join('')+`</div>`;
+  }
+  document.getElementById('tree').innerHTML=html;
+
+  document.querySelectorAll('.tact.add').forEach(b=>b.addEventListener('click',()=>{
+    nodes.push({id:uid++,parent:+b.dataset.id,text:'원인을 입력하세요',core:false}); renderTree();
+  }));
+  document.querySelectorAll('.tact.mark').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.dataset.id; const nd=nodes.find(x=>x.id===id);
+    nodes.forEach(x=>{ if(x.id!==id) x.core=false; });
+    nd.core=!nd.core; renderTree();
+  }));
+  document.querySelectorAll('.tact.del').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.dataset.id;
+    const rm=[id]; let changed=true;
+    while(changed){ changed=false;
+      nodes.forEach(x=>{ if(x.parent!==null&&rm.includes(x.parent)&&!rm.includes(x.id)){rm.push(x.id);changed=true;} });
+    }
+    S.trees[S.focus]=nodes.filter(x=>!rm.includes(x.id)); renderTree();
+  }));
+  document.querySelectorAll('.ttx').forEach(el=>{
+    el.addEventListener('blur',()=>{
+      const nd=nodes.find(x=>x.id===+el.dataset.id);
+      if(nd) nd.text=el.textContent.trim()||'(입력)';
+    });
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();el.blur();} });
+  });
+}
+
+/* ── Initiatives ── */
+function renderInits(){
+  const n=S.focus;
+  if(!S.inits[n]) S.inits[n]=[];
+  const rows=S.inits[n];
+  document.getElementById('initBody').innerHTML = rows.length ? rows.map((r,i)=>`
+    <tr>
+      <td><input data-i="${i}" data-f="text" value="${r.text||''}" placeholder="실행 과제"></td>
+      <td><select data-i="${i}" data-f="type">
+        <option value="">선택</option>
+        ${TYPES.map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}
+      </select></td>
+      <td><select data-i="${i}" data-f="timing">
+        <option value="">선택</option>
+        ${TIMING.map(t=>`<option ${r.timing===t?'selected':''}>${t}</option>`).join('')}
+      </select></td>
+      <td><input data-i="${i}" data-f="owner" value="${r.owner||''}" placeholder="오너"></td>
+      <td><button class="rmb" data-i="${i}">×</button></td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">아직 없습니다</td></tr>`;
+
+  document.querySelectorAll('#initBody input,#initBody select').forEach(el=>{
+    el.addEventListener('change',()=>{ rows[+el.dataset.i][el.dataset.f]=el.value; });
+    el.addEventListener('input',()=>{ rows[+el.dataset.i][el.dataset.f]=el.value; });
+  });
+  document.querySelectorAll('.rmb').forEach(b=>b.addEventListener('click',()=>{
+    rows.splice(+b.dataset.i,1); renderInits();
+  }));
+}
+document.getElementById('addInit').addEventListener('click',()=>{
+  const n=S.focus; if(!S.inits[n]) S.inits[n]=[];
+  S.inits[n].push({text:'',type:'',timing:'',owner:''}); renderInits();
+});
+
+/* ══════════ PART 3 ══════════ */
+function renderP3(){
+  const all=[];
+  ISSUES.forEach(i=>{ (S.inits[i.n]||[]).forEach(r=>{ if(r.text) all.push({...r,src:i}); }); });
+  const later=ISSUES.filter(i=>!S.consensus[i.n]);
+
+  document.getElementById('p3stats').innerHTML =
+    `<div class="stat"><div class="sn">${all.length}</div><div class="sl">도출된 이니셔티브</div></div>
+     <div class="stat"><div class="sn">${Object.keys(S.consensus).length}</div><div class="sl">사분면 합의 완료</div></div>
+     <div class="stat"><div class="sn">${all.filter(r=>r.owner).length}</div><div class="sl">오너 지정 완료</div></div>
+     <div class="stat"><div class="sn">${later.length}</div><div class="sl">후속 딥다이브</div></div>`;
+
+  document.getElementById('sumBody').innerHTML = all.length ? all.map((r,i)=>`
+    <tr><td>${i+1}</td><td><b>${r.text}</b></td>
+    <td style="color:var(--dim);font-size:12px">${String(r.src.n).padStart(2,'0')}. ${r.src.t}</td>
+    <td>${r.type?`<span class="tagchip">${r.type}</span>`:'—'}</td>
+    <td style="font-size:12px">${r.timing||'—'}</td>
+    <td>${r.owner||'<span style="color:var(--red)">미지정</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty">아직 도출된 이니셔티브가 없습니다</td></tr>`;
+
+  document.getElementById('laterBody').innerHTML = later.length ? later.map((i,k)=>`
+    <tr><td>${k+1}</td><td>${String(i.n).padStart(2,'0')}. ${i.t}</td>
+    <td>${S.consensus[i.n]?QUADS[S.consensus[i.n]].name:'—'}</td>
+    <td style="color:var(--dim)">${S.status[i.n]==='later'?'사전 응답 없음':'논의 미완료'}</td></tr>`).join('')
+    : `<tr><td colspan="4" class="empty">모든 문제가 논의되었습니다</td></tr>`;
+}
+
+/* ══════════ EXPORT ══════════ */
+document.getElementById('expJson').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`MODE_workshop_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+});
+document.getElementById('expCsv').addEventListener('click',()=>{
+  const rows=[['문항번호','문제','이니셔티브','성격','시점','오너','합의사분면']];
+  ISSUES.forEach(i=>(S.inits[i.n]||[]).forEach(r=>{
+    if(r.text) rows.push([i.n,i.t,r.text,r.type||'',r.timing||'',r.owner||'',
+      S.consensus[i.n]?QUADS[S.consensus[i.n]].name:'']);
+  }));
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`MODE_initiatives_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+document.getElementById('loadJson').addEventListener('click',()=>document.getElementById('fileIn').click());
+document.getElementById('fileIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    const d=JSON.parse(rd.result);
+    Object.assign(S,d);
+    uid = Math.max(100, ...Object.values(S.trees||{}).flat().map(x=>x.id||0))+1;
+    renderP1(); renderP2(); renderP3();
+    alert('불러왔습니다.');
+  }catch(err){ alert('파일을 읽을 수 없습니다.'); } };
+  rd.readAsText(f);
+});
+
+/* ══════════ INIT ══════════ */
+renderP1(); renderP2();
+</script>
+</body>
+</html>
