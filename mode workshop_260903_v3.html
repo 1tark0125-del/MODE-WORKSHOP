@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MODE Action Planning Workshop</title>
+<style>
+:root{
+  --bg:#0A0A0A; --panel:#141414; --panel2:#1C1C1C; --panel3:#252525;
+  --line:#303030; --gold:#FFD200; --goldd:#8A7100;
+  --white:#F0F0F0; --grey:#C9C9C9; --dim:#8E8E8E;
+  --qw:#3FB950; --mp:#4C9AFF; --fi:#B8B8B8; --rc:#FFD200;
+  --red:#E8533F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--white);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",-apple-system,sans-serif;
+  line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+
+/* ── top bar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;background:rgba(10,10,10,.97);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:12px 26px;
+}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.brand b{color:var(--gold)}
+.navtabs{display:flex;gap:6px;margin-left:8px}
+.navtab{
+  background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.navtab.on{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.navtab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.spacer{flex:1}
+.saveind{font-size:11.5px;color:var(--dim);white-space:nowrap;transition:color .3s}
+.saveind.flash{color:var(--qw)}
+.timer{
+  display:flex;align-items:center;gap:10px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:8px;padding:6px 12px;
+}
+.tdisp{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--gold);min-width:62px;text-align:center;letter-spacing:.02em}
+.tdisp.warn{color:var(--red)}
+.tbtn{background:none;border:1px solid var(--line);color:var(--grey);
+  width:28px;height:26px;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── layout ── */
+.view{display:none;padding:26px}
+.view.on{display:block}
+.wide{max-width:1600px;margin:0 auto}
+
+h2.vt{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.vsub{font-size:14px;color:var(--dim);margin-bottom:22px}
+
+/* ── PART 1 : issue grid ── */
+.axisrow{margin-bottom:18px}
+.axishead{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.ptag{background:var(--gold);color:#0A0A0A;font-weight:800;font-size:11px;
+  padding:3px 9px;border-radius:4px}
+.axisname{font-size:14px;font-weight:700}
+.axissub{font-size:12px;color:var(--dim)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:9px}
+.icard{
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:13px 15px;cursor:pointer;transition:.15s;position:relative;
+}
+.icard:hover{border-color:var(--goldd)}
+.icard.focus{border-color:var(--gold);background:#1E1900}
+.icard .inum{font-size:11px;font-weight:800;color:var(--dim);
+  font-variant-numeric:tabular-nums}
+.icard .ittl{font-size:13.5px;font-weight:600;margin-top:3px;line-height:1.4}
+.icard .ibar{display:flex;gap:2px;margin-top:9px;height:5px;border-radius:3px;overflow:hidden}
+.icard .ibar i{display:block;height:100%}
+.icard .imeta{font-size:10.5px;color:var(--dim);margin-top:6px;
+  display:flex;justify-content:space-between}
+.statechip{position:absolute;top:11px;right:12px;font-size:9.5px;font-weight:800;
+  padding:2px 7px;border-radius:10px;letter-spacing:.03em}
+.st-agree{background:#14361B;color:var(--qw)}
+.st-split{background:#3A2E00;color:var(--gold)}
+.st-later{background:var(--panel3);color:var(--dim)}
+
+/* ── PART 2 : deep dive ── */
+.dd{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+.ddleft{position:sticky;top:78px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:18px 20px;margin-bottom:14px}
+.panel h3{font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.06em;
+  margin-bottom:12px;text-transform:uppercase}
+
+.qnav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.qchip{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  width:34px;height:32px;border-radius:6px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:inherit}
+.qchip.on{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.qchip.done{border-color:var(--qw);color:var(--qw)}
+
+.ddtitle{font-size:22px;font-weight:800;line-height:1.35;margin-bottom:8px}
+.dddesc{font-size:13.5px;color:var(--grey);line-height:1.6;
+  padding-left:12px;border-left:2px solid var(--panel3);margin-bottom:18px}
+
+/* distribution */
+.distrow{display:flex;gap:8px;margin-bottom:14px}
+.dcell{flex:1;background:var(--panel2);border:1px solid var(--line);
+  border-radius:8px;padding:10px 11px;text-align:center}
+.dcell .dn{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.dcell .dl{font-size:10px;font-weight:700;margin-top:2px;letter-spacing:.02em}
+.dcell.qw .dn,.dcell.qw .dl{color:var(--qw)}
+.dcell.mp .dn,.dcell.mp .dl{color:var(--mp)}
+.dcell.fi .dn,.dcell.fi .dl{color:var(--fi)}
+.dcell.rc .dn,.dcell.rc .dl{color:var(--rc)}
+
+.opinions{max-height:520px;overflow-y:auto}
+.opin{padding:9px 0;border-bottom:1px solid var(--line)}
+.opin:last-child{border:none}
+.opin .oh{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.opin .oname{font-size:12px;font-weight:700}
+.opin .oq{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:8px}
+.oq.QW{background:#14361B;color:var(--qw)} .oq.MP{background:#122A47;color:var(--mp)}
+.oq.FI{background:#2A2A2A;color:var(--fi)} .oq.RC{background:#3A2E00;color:var(--rc)}
+.opin .oraw{font-size:12px;color:var(--white);line-height:1.55;white-space:normal}
+.opin .otx{font-size:11.8px;color:#E2E2E2;line-height:1.55;margin-top:7px;
+  padding-left:10px;border-left:2px solid var(--goldd)}
+.tlabel{display:inline-block;font-size:8.5px;font-weight:800;color:var(--gold);
+  border:1px solid var(--gold);border-radius:3px;padding:0 4px;margin-right:6px;
+  vertical-align:1px;letter-spacing:.04em}
+
+/* consensus picker */
+.qpick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qp{background:var(--panel2);border:2px solid var(--line);border-radius:9px;
+  padding:14px;cursor:pointer;font-family:inherit;text-align:center;transition:.15s}
+.qp:hover{border-color:var(--goldd)}
+.qp .qpn{font-size:13px;font-weight:800;color:var(--white);display:block}
+.qp .qpd{font-size:10.5px;color:var(--dim);margin-top:3px;display:block}
+.qp.sel[data-q=QW]{background:var(--qw);border-color:var(--qw)}
+.qp.sel[data-q=MP]{background:var(--mp);border-color:var(--mp)}
+.qp.sel[data-q=FI]{background:var(--fi);border-color:var(--fi)}
+.qp.sel[data-q=RC]{background:var(--rc);border-color:var(--rc)}
+.qp.sel .qpn,.qp.sel .qpd{color:#0A0A0A}
+
+/* ── why tree (horizontal) ── */
+.treewrap{overflow-x:auto;padding:6px 2px 12px}
+.tree{display:flex;align-items:flex-start;gap:0;min-width:min-content}
+.tcol{display:flex;flex-direction:column;justify-content:center;gap:10px}
+.tnode{
+  background:var(--panel2);border:1.5px solid var(--line);border-radius:8px;
+  padding:10px 13px;min-width:190px;max-width:230px;position:relative;
+}
+.tnode.root{border-color:var(--red);background:#1A0806}
+.tnode.core{border-color:var(--red);background:#2A0A06;box-shadow:0 0 0 2px rgba(232,83,63,.18)}
+.tnode .ttx{font-size:12.5px;font-weight:600;line-height:1.4;
+  outline:none;min-height:18px}
+.tnode .ttx:focus{color:var(--gold)}
+.tnode .tacts{display:flex;gap:5px;margin-top:8px;opacity:.55}
+.tnode:hover .tacts{opacity:1}
+.tact{background:none;border:1px solid var(--line);color:var(--dim);
+  font-size:10px;padding:2px 7px;border-radius:5px;cursor:pointer;font-family:inherit}
+.tact:hover{border-color:var(--gold);color:var(--gold)}
+.tact.mark:hover{border-color:var(--red);color:var(--red)}
+.tconn{width:34px;align-self:stretch;position:relative;flex-shrink:0;min-height:60px}
+.tconn svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* initiatives */
+.inits{width:100%;border-collapse:collapse}
+.inits th{font-size:10.5px;font-weight:800;color:var(--gold);text-align:left;
+  padding:7px 9px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.inits td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.inits input,.inits select{
+  width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--white);
+  padding:8px 10px;border-radius:6px;font-size:12.5px;font-family:inherit}
+.inits input:focus,.inits select:focus{outline:2px solid var(--gold);outline-offset:0;border-color:transparent}
+.rmb{background:none;border:none;color:var(--dim);cursor:pointer;font-size:15px;padding:2px 6px}
+.rmb:hover{color:var(--red)}
+.addb{background:var(--panel2);border:1px dashed var(--line);color:var(--grey);
+  padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;margin-top:10px}
+.addb:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── PART 3 ── */
+.sumtable{width:100%;border-collapse:collapse;font-size:13px}
+.sumtable th{font-size:11px;font-weight:800;color:var(--gold);text-align:left;
+  padding:9px 11px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.sumtable td{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+.tagchip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;
+  background:var(--panel3);color:var(--grey);white-space:nowrap}
+.qbadge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px}
+.stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:14px 20px;min-width:130px}
+.stat .sn{font-size:28px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat .sl{font-size:11.5px;color:var(--dim);margin-top:2px}
+
+.exportbar{display:flex;gap:9px;margin-top:20px}
+.ebtn{background:var(--gold);color:#0A0A0A;border:none;padding:11px 22px;
+  border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
+.ebtn.ghost{background:none;border:1px solid var(--line);color:var(--grey)}
+.ebtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+.actbar{display:flex;align-items:center;gap:10px;margin-top:16px;
+  padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:11px}
+.actbar .prog{flex:1;font-size:12.5px;color:var(--dim)}
+.actbar .prog b{color:var(--gold)}
+.nbtn{background:var(--panel2);border:1px solid var(--line);color:var(--grey);
+  padding:11px 20px;border-radius:8px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.nbtn:hover{border-color:var(--gold);color:var(--gold)}
+.nbtn.primary{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.nbtn.primary:hover{background:#FFE45C}
+.nbtn:disabled{opacity:.35;cursor:not-allowed}
+.nbtn.saving{background:var(--panel3);color:var(--dim)}
+.cloudind{font-size:11px;color:var(--dim);white-space:nowrap}
+.cloudind.ok{color:var(--qw)} .cloudind.err{color:var(--red)}
+.empty{color:var(--dim);font-size:13px;padding:26px 0;text-align:center;font-style:italic}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><b>MODE</b> Action Planning</div>
+  <div class="navtabs">
+    <button class="navtab on" data-view="v1">1 · Overview</button>
+    <button class="navtab" data-view="v2">2 · Deep Dive</button>
+    <button class="navtab" data-view="v3">3 · Wrap-up</button>
+  </div>
+  <div class="spacer"></div>
+  <span class="saveind" id="saveInd">Ready</span>
+  <button class="tbtn" id="clearAll" title="Start over" style="width:auto;padding:0 10px">Reset</button>
+  <div class="timer">
+    <button class="tbtn" id="tMinus">−</button>
+    <span class="tdisp" id="tDisp">24:00</span>
+    <button class="tbtn" id="tPlus">+</button>
+    <button class="tbtn" id="tPlay">▶</button>
+    <button class="tbtn" id="tReset">↺</button>
+  </div>
+</div>
+
+<!-- ══════ PART 1 ══════ -->
+<div class="view on" id="v1">
+  <div class="wide">
+    <h2 class="vt">16 Issues from the Diagnosis</h2>
+    <p class="vsub">Classified by pre-work responses into aligned and split. Click a card to open the deep dive.</p>
+    <div class="stats" id="p1stats"></div>
+    <div id="issueGrid"></div>
+  </div>
+</div>
+
+<!-- ══════ PART 2 ══════ -->
+<div class="view" id="v2">
+  <div class="wide">
+    <div class="qnav" id="qnav"></div>
+    <div class="dd">
+      <div class="ddleft">
+        <div class="panel">
+          <h3>Pre-work Distribution</h3>
+          <div class="distrow" id="distRow"></div>
+          <h3 style="margin-top:16px">Leadership Comments</h3>
+          <div class="opinions" id="opinList"></div>
+        </div>
+      </div>
+      <div class="ddright">
+        <div class="panel">
+          <div class="ddtitle" id="ddTitle"></div>
+          <div class="dddesc" id="ddDesc"></div>
+          <h3>① Agree on the Quadrant</h3>
+          <div class="qpick" id="qPick"></div>
+        </div>
+        <div class="panel">
+          <h3>② Root Cause — Why Tree</h3>
+          <div class="treewrap"><div class="tree" id="tree"></div></div>
+        </div>
+        <div class="panel">
+          <h3>③ Initiatives &amp; Owners</h3>
+          <table class="inits"><thead><tr>
+            <th style="width:38%">Initiative</th><th style="width:18%">Type</th>
+            <th style="width:14%">Timing</th><th style="width:22%">Owner</th><th style="width:8%"></th>
+          </tr></thead><tbody id="initBody"></tbody></table>
+          <button class="addb" id="addInit">+ Add initiative</button>
+          <datalist id="typeList"></datalist>
+          <datalist id="timingList"></datalist>
+        </div>
+        <div class="actbar">
+          <button class="nbtn" id="btnPrev">← Previous</button>
+          <div class="prog" id="ddProg"></div>
+          <span class="cloudind" id="cloudInd"></span>
+          <button class="nbtn" id="btnSaveNow">Save now</button>
+          <button class="nbtn primary" id="btnNext">Next issue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PART 3 ══════ -->
+<div class="view" id="v3">
+  <div class="wide">
+    <h2 class="vt">Initiatives Agreed</h2>
+    <p class="vsub">Action items agreed today, and issues carried forward for a deeper dive.</p>
+    <div class="stats" id="p3stats"></div>
+    <div class="panel">
+      <h3>Action Items</h3>
+      <table class="sumtable"><thead><tr>
+        <th style="width:5%">#</th><th style="width:28%">Initiative</th>
+        <th style="width:22%">Source Issue</th><th style="width:13%">Type</th>
+        <th style="width:11%">Timing</th><th style="width:21%">Owner</th>
+      </tr></thead><tbody id="sumBody"></tbody></table>
+    </div>
+    <div class="panel">
+      <h3>Carried Forward</h3>
+      <table class="sumtable"><thead><tr>
+        <th style="width:6%">#</th><th style="width:44%">Issue</th>
+        <th style="width:16%">Agreed Quadrant</th><th style="width:34%">Note</th>
+      </tr></thead><tbody id="laterBody"></tbody></table>
+    </div>
+    <div class="exportbar">
+      <button class="ebtn" id="expJson">Export (JSON)</button>
+      <button class="ebtn ghost" id="expCsv">Initiatives CSV</button>
+      <button class="ebtn ghost" id="loadJson">Import</button>
+      <input type="file" id="fileIn" accept=".json" style="display:none">
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════ ISSUES (same as pre-work) ══════════ */
+const ISSUES = [
+ {n:1,ax:"P1",sec:"Time Allocation",t:"Gap between recorded and perceived work hours",
+  d:"Members perceive a heavier workload than their recorded hours suggest. The gap appears across marketing, and its size differs by organization."},
+ {n:2,ax:"P1",sec:"Time Allocation",t:"Long working hours in some units",
+  d:"Working hours are markedly longer in certain units."},
+ {n:3,ax:"P1",sec:"Time Allocation",t:"Short working hours in some units (under 40h/week)",
+  d:"Some units record fewer than 40 hours per week. Whether this reflects workload distribution, the nature of the work, or recording accuracy needs a team-by-team review."},
+ {n:4,ax:"P1",sec:"Time Allocation",t:"Time absorbed by low-value work such as reporting and operations",
+  d:"Deck preparation and operational or administrative work take up a substantial share of total time, leaving less room for strategy and analysis."},
+ {n:5,ax:"P1",sec:"Time Allocation",t:"Insufficient people-management time for team leaders",
+  d:"Team leaders spend very little of their time managing and developing their members. Leaders too are absorbed by reporting and operational work."},
+ {n:6,ax:"P2",sec:"Work Priority Alignment",t:"Misalignment of work priorities between leaders and members",
+  d:"Leaders and members see the same work differently. They largely agree on what matters, but differ considerably on how demanding the work is."},
+ {n:7,ax:"P2",sec:"Work Priority Alignment",t:"Teams with extremely low work-priority alignment relative to the average",
+  d:"Teams whose alignment falls far below the average require a clear diagnosis and specific improvement actions."},
+ {n:8,ax:"P3",sec:"Org Effectiveness",t:"Formal processes that hinder rather than support the work",
+  d:"Reporting lines, approval steps and work processes get in the way of doing the work efficiently. This scored lowest among the six organizational-effectiveness dimensions."},
+ {n:9,ax:"P3",sec:"Org Effectiveness",t:"Organizational culture that does not motivate",
+  d:"The culture and everyday practices do not sustain motivation or energy. Decision-making style and communication norms were the main points raised."},
+ {n:10,ax:"P3",sec:"Org Effectiveness",t:"Frequent decision reversals",
+  d:"Decisions are made and then overturned, repeatedly. This appeared in open-ended responses from almost every division — the most widespread driver of lost motivation."},
+ {n:11,ax:"P3",sec:"Org Effectiveness",t:"Teams with org-effectiveness far below the average (where bottlenecks concentrate)",
+  d:"Organizational-effectiveness scores also vary widely by team, with bottlenecks concentrated in particular teams."},
+ {n:12,ax:"P4",sec:"Voice of Employee",t:"Complex approval and purchasing processes",
+  d:"Expense handling, purchasing procedures and multi-step approvals were raised repeatedly across organizations."},
+ {n:13,ax:"P4",sec:"Voice of Employee",t:"Unclear roles and responsibilities",
+  d:"Boundaries of roles and responsibilities between teams are not clear. The same work arrives through several routes, and standards differ by department."},
+ {n:14,ax:"P4",sec:"Voice of Employee",t:"Lack of onboarding",
+  d:"Onboarding and training for new joiners are insufficient. Gaps in industry and product understanding, and the absence of work manuals, were both raised."},
+ {n:15,ax:"P4",sec:"Voice of Employee",t:"Limited AI access, with time lost to repetitive work",
+  d:"Access to AI tools is restricted. Many noted that time still goes into repetitive work — data cleanup, first drafts of reports — that AI could handle."},
+ {n:16,ax:"P4",sec:"Voice of Employee",t:"Frequent meetings",
+  d:"There are many recurring and ad-hoc meetings, sometimes with overlapping attendees and agendas."}
+];
+
+const QUADS={
+  QW:{name:"QUICK WIN",desc:"High impact · Easy",color:"var(--qw)"},
+  MP:{name:"MAJOR PROJECT",desc:"High impact · Demanding",color:"var(--mp)"},
+  FI:{name:"FILL-IN",desc:"Low impact · Easy",color:"var(--fi)"},
+  RC:{name:"RECONSIDER",desc:"Low impact · Demanding",color:"var(--rc)"}
+};
+const TYPES=["AI Application","Elimination / Consolidation","R&R Realignment",
+             "Process Redesign","Org Structure Redesign"];
+const TIMING=["Quick Win (~90 days)","Mid-term (~6 months)","Long-term (12+ months)"];
+
+/* ══════════ PRE-WORK RESPONSES (paste consolidated data here) ══════════
+   Format: PRE[issueNo] = [{name:"Name", q:"QW|MP|FI|RC", memo:"one-line summary"}, ...]
+   ─ Currently holds the 2 completed responses. */
+const PRE = {
+ 1:[{name:"Sim Kyosun",q:"FI",memo:"I think there are cases where the intensity of the work is high, so people feel the work is longer or harder than the actual hours put in. In the case of the SI&I team, there are on average at least 3-4 GHQ sessions a month, and there are cases where people count that as work, which creates a gap. External schedules for agencies or research also have some effect, though minor.",raw:"업무의 Intensity 가 높아서, 실제 투여 시간 대비 업무가 길다 또는 힘들다고 생각하는 경우가 있을수 있다고 생각합니다. SI&I 팀의 경우 평균적으로 월간 적어도 3~4번정도의 GHQ Session 이 진행되는 경우가 있고, 해당 부분을 업무로 생각해서 차이가 있는 경우도 발생. 또한 Agency나 Research 를 위한 외부 일정도 Minor 하지만 일부 영향이 있는것 같습니다."},
+    {name:"Wongi Ryu",q:"FI",memo:"Much work happens off-site — shooting, partner visits — and at home, none of which is captured in records.",raw:"They work a lot of time out of office such as shooting, visiting to external partners. They also work at home for long time which is not counted on the record.",ko:"촬영이나 외부 파트너 방문 등 사무실 밖에서 일하는 시간이 많습니다. 재택 근무 시간도 기록에 잡히지 않습니다."}],
+ 2:[{name:"Sim Kyosun",q:"MP",memo:"When a few people work overtime or long hours, relative comparisons start being made across other teams and individuals, which I think has a negative long-term effect. That said, if it stems from working with GHQ, from changes that could not be planned in advance, or from additional work scope, then an overall change in the company's way of working would be needed — which does not look easy.",raw:"몇몇이 야근이나 장시간 근무를 하면 다른 팀과 인원들에서 상대적인 비교가 이루어 지고.. 장기적으로는 좋지 않은 영향을 준다고 봅니다. 다만 해당 팀이나 업무가 GHQ 과 업무를 하거나, 미리 계획하지 못한 변화 또는 추가적인 업무 스콥으로 인한 부분이라고 생각하면 회사의 전반적인 WoW 이 필요할것 같은데, 쉽지 않아 보입니다."},
+    {name:"Wongi Ryu",q:"MP",memo:"Likely a headcount shortage. Reducing hours needs hiring, which will be hard. A deep dive is needed on whether the cause is the same across teams.",raw:"It is easy to assume that long working hours for a specific group stem from a staff shortage relative to headcount. Reducing these hours typically requires new hiring, which will likely be difficult. However, a deep dive is needed to determine whether every team is working long hours for the same reason.",ko:"특정 조직의 장시간 근무는 헤드카운트 대비 인력 부족에서 온다고 보는 게 자연스럽습니다. 시간을 줄이려면 충원이 필요한데 쉽지 않을 것입니다. 다만 모든 팀이 같은 이유로 장시간 근무하는지는 딥다이브가 필요합니다."}],
+ 3:[{name:"Sim Kyosun",q:"FI",memo:"I think this is easy to solve. For those with poor attendance, clear rewards and penalties or warnings are needed. (Currently this is handled team by team, but there should be clear guidance through company rules or OPR / Performance Rating — separate from whether their other work performance is good or bad.) As for the impact: looking at whether short working hours mean work is being dropped, at least on our team that is rarely the case, and there are many instances of catching up after hours. So I do not think the impact is large. However, since attendance is the foundation of working at a company, clear guidance and an accompanying policy must be in place.",raw:"해결은 쉽다고 생각하며, 근태가 좋지 않은 인원들의 경우 확실한 상벌 또는 Warning 필요 하다고 생각 합니다. (현재 팀별로 진행하고 있는데, 회사 내규 등 또는 OPR/ Performance Rating 등.. 다른 업무의 성과의 좋고 나쁨과 별개로 명확한 가이드) 효과는 업무 시간이 짧아서 지금 업무를 놓지고 있는지 아닌지를 보면 적어도 우리 팀에서는 그런 경우는 많지 않고, 퇴근 후에도 별도로 Catch up 해야 하는 경우도 많아 효과의 측면에서는 크다고 생각하지 않음. 다만 회사 업무의 기본이 되는 근태에 대한 것이기 때문에 반드시 명확한 Guide와 그에 대한 정책이 수반되어야 한다고 생각 함"},
+    {name:"Wongi Ryu",q:"FI",memo:"Heavy workload but much of it is field or home work. Still, 40 hours is company policy, so I will communicate compliance clearly.",raw:"Our team manages a heavy workload, but much of that work doesn't happen in the office. It often involves field work or working continuously from home. I don't want to evaluate our team's performance based simply on desk time. However, since the 40-hour workweek is a company rule, I will communicate this clearly to ensure everyone complies.",ko:"우리 팀은 업무량이 많지만 상당 부분이 사무실 밖에서 이뤄집니다. 현장 업무나 재택으로 이어지는 경우가 많습니다. 책상에 앉아 있는 시간으로 팀 성과를 평가하고 싶지는 않습니다. 다만 주 40시간은 회사 규정이므로 준수하도록 명확히 커뮤니케이션하겠습니다."}],
+ 4:[{name:"Sim Kyosun",q:"MP",memo:"- I do not think all report preparation is low-value work.\n- Internally, work is often done across several teams rather than within one team. In those cases internal progress and status must be updated, and to set the right context for people with less involvement or for the report's audience, the contents inevitably become longer — and so does the report.\n- On top of that, there are many internal initiatives running at once, so all of the above gets multiplied.",raw:"- 모든 보고 자료 준비가 Low Value work 이라고 생각하지 않습니다.\n- 내부적으로 업무가 한팀에서 이루어 지기보다 여러팀과 함께 진행되는 경우가 많고, 그런 경우 내부 Progress/ Status를 업데이트 해야 하는데 이런 경우, Involvement 가 적은 인원들/보고 대상자의 right Context Set up을 위해 Contents길어 지고, 보고서의 내용도 길어 질수 밖에 없는 구조입니다.\n- 추가적으로 내부적으로 진행하는 Initiative 자체가 많아 위의 내용들이 Mutiple이 되는 상황이라고 생각함"},
+    {name:"Wongi Ryu",q:"MP",memo:"These exist to support decisions. Aligning with leaders to cut non-essential reporting would lighten the load significantly.",raw:"Whether it's creating decks or preparing reports, these tasks are created to support specific decision-making needs. The most effective way to optimize our time and effort is to streamline these presentations or simplify reporting overall. If we can align with leaders on reducing non-essential reporting, it would significantly lighten the workload for everyone.",ko:"덱을 만들든 보고서를 준비하든, 이 업무들은 특정 의사결정을 지원하기 위해 생긴 것입니다. 시간과 노력을 최적화하는 가장 효과적인 방법은 발표자료를 간소화하거나 보고 자체를 단순화하는 것입니다. 불필요한 보고를 줄이는 데 리더들과 합의할 수 있다면 모두의 업무 부담이 크게 줄 것입니다."}],
+ 5:[{name:"Sim Kyosun",q:"FI",memo:"I do not fully understand this point. I am confused as to whether people management refers to matters outside of work, or to training on the work itself. In reality most work is learned by doing, so the priority should be building a culture where people check with their manager as questions come up.",raw:"해당 내용이 잘 이해가 가지는 않습니다. People management 가 업무 외에 대한 부분인지, 아니면 업무에 대한 교육인지 혼동이 되는데, 사실 대부분은 업무는 일을 하면서 배우게 되는 경우가 대부분이고 질문은 그 때 그때 메니저를 통해 확인을 하는 문화를 만드는게 우선 되어야 할것 같습니다."},
+    {name:"Wongi Ryu",q:"MP",memo:"Lean teams force leaders into hands-on execution — a structural limit. Continuous people-management training will be essential.",raw:"Fundamentally, team leaders are held accountable for their core operational goals, so naturally, they want their work to yield strong results. However, because teams are often lean, leaders face structural limitations that force them to spend a significant amount of time on hands-on execution. Additionally, I believe continuous training in people management will be essential for team leaders moving forward.",ko:"근본적으로 팀 리더는 핵심 운영 목표에 책임을 지기 때문에 좋은 성과를 내고자 합니다. 그러나 팀 규모가 작다 보니 리더가 실무에 상당한 시간을 쓸 수밖에 없는 구조적 한계가 있습니다. 또한 팀 리더 대상의 지속적인 피플 매니지먼트 교육이 앞으로 필수적이라고 봅니다."}],
+ 6:[{name:"Sim Kyosun",q:"MP",memo:"- Where there is a large difference in the scope of work between the team lead and the members, members assess based only on their own work while the lead assesses across multiple areas — so differences can naturally exist.\n- Someone who has been in the role a long time versus someone who has just joined: during the adjustment period, there is a tendency to judge everything one does as important, difficult and time-consuming.\nOn this point, where the work does not overlap perfectly, I think it is wrong to view misalignment as unconditionally bad.",raw:"- 팀장 과 팀원의 업무의 Scope 의 차이가 큰 경우, 팀원들은 자신의 업무 만을 보고 평가를 하고, 팀장은 여러 업무를 보고 평가 하기 때문에 다른 경우가 존재 할수 있다고 생각\n- 해당 Role 에 오래 근무한 경우 vs. 근무한지 얼마 안된경우, 적응 하는 과정에서는 내가 하는 모든 일이 중요하고, 어렵고, 오래 걸린다고 평가하는 기준이 있을것 이라고 생각함.\n이 부분은 업무가 완벽히 Overlap 되지 않는 경우 불일치를 무조건 나쁘다고 보는 것은 잘못 된것 같다고 생각함."},
+    {name:"Wongi Ryu",q:"QW",memo:"Little difficulty if leads communicate intent and context clearly. Where a gap exists, align expectations through 1:1s.",raw:"When assigning individual tasks, there is little difficulty as long as team leads clearly communicate their intent and context. However, if there is a gap in overall perception regarding the task, it is necessary to align expectations through one-on-ones or direct conversations.",ko:"개별 업무를 배분할 때 팀 리드가 의도와 맥락을 명확히 전달하면 큰 어려움은 없습니다. 다만 업무에 대한 전반적 인식에 갭이 있다면 1:1이나 직접 대화를 통해 기대치를 정렬할 필요가 있습니다."}],
+ 7:[{name:"Sim Kyosun",q:"MP",memo:"Same as the point above.",raw:"위 의견과 동일"},
+    {name:"Wongi Ryu",q:"QW",memo:"A matter of communication frequency. Clear context, purpose and priority resolves it, and efficiency rises sharply.",raw:"A low alignment on work priority indicates that more frequent communication is needed between leaders and team members. This aligns closely with the point made in Question 7. If leaders provide clear context, purpose, and priority when assigning tasks, this shouldn't be a major issue. However, resolving this gap effectively will significantly boost the team's operational efficiency.",ko:"업무 우선순위 정합이 낮다는 것은 리더와 팀원 간 소통이 더 잦아야 한다는 뜻입니다. 앞의 항목과 맞닿아 있습니다. 리더가 업무를 줄 때 맥락·목적·우선순위를 명확히 제시하면 큰 문제가 되지 않습니다. 다만 이 갭을 제대로 해소하면 팀의 운영 효율이 크게 올라갈 것입니다."}],
+ 8:[{name:"Sim Kyosun",q:"MP",memo:"There is no team without any process at all — each has its own processes in place. The issue is rather how detailed and how realistic those processes are. Even where processes are well established, exceptions are sometimes made depending on the business situation, and when this repeats, there is a strong chance of confusion about whether the existing process must be followed or not.",raw:"프로세스가 아예 없는 팀은 없지 않고, 각자의 프로세스는 갖추어져 있다고 생각합니다. 다만 프로세스가 얼마나 Detail 하고, 얼마나 Realistic 하냐 라는 것에 문제가 있을 것 같습니다. 프로세스가 잘 잡혀 있는 경우에도 때때로 business 상황에 따라 예외를 두는 경우가 있고, 이런 경우가 반복 되면 기존의 프로세스가 무조건 따라야 하는 것인지 아닌지 혼동이 될 가능성도 크다고 생각합니다."},
+    {name:"Wongi Ryu",q:"MP",memo:"Senior leaders should make fewer, more critical decisions while junior levels handle the rest — this builds ownership and speed.",raw:"I believe that as leaders advance to higher levels, it becomes increasingly important to make fewer, yet more critical, decisions. Establishing a structure where high-stakes decisions are made by senior leaders while lower-stakes decisions are handled at junior levels enables greater ownership, builds confidence, and drives faster execution.",ko:"리더의 직급이 올라갈수록 더 적은 수의, 더 중요한 결정을 내리는 것이 중요해진다고 봅니다. 중대한 결정은 상위 리더가, 낮은 수준의 결정은 하위에서 처리하는 구조를 만들면 오너십이 커지고 자신감이 생기며 실행 속도가 빨라집니다."}],
+ 9:[{name:"Sim Kyosun",q:"MP",memo:"I believe motivation has to be driven by the individual. Changing it culturally matters too, but there is a short-term and a long-term dimension.",raw:"동기 부여는 개인이 Drive 해야 한다고 생각 합니다. 문화적으로 바꾸는 것도 중요하지만 Short term, Long term"},
+    {name:"Wongi Ryu",q:"QW",memo:"Simple in concept, hard in practice: leaders state what they want, listen actively, and build trust even when views differ.",raw:"This can be simple in concept, yet challenging in practice. But what if we foster a culture where leaders with decision-making power clearly define what they want, actively listen, and build trust—empowering team members even when opinions differ?",ko:"개념은 단순하지만 실천은 어렵습니다. 결정권을 가진 리더가 원하는 바를 명확히 정의하고, 적극적으로 경청하며, 신뢰를 쌓아 의견이 달라도 팀원에게 권한을 준다면 어떨까요?"}],
+ 10:[{name:"Sim Kyosun",q:"RC",memo:"I think we need to check whether the decision is a final one, or whether a decision made with the manager gets changed at a level above. It can affect motivation, but I see it as unavoidable in business, and given the nature of the business I think change would be extremely difficult.",raw:"의사결정이 최종 결정인지, 아니면 메니져와의 결정이 위 단계에서 변동이 되는지 확인이 필요할듯 합니다. 동기 저하에는 영향을 줄수는 있으나, 비지니스상에는 피할수 없는 부분이라고 생각되며. 비지니스의 특성상 변화가 무척이나 어렵다고 생각합니다."},
+    {name:"Wongi Ryu",q:"MP",memo:"It comes down to defining leaders' decision scope. A conversation about empowerment and trust — delegation naturally reduces reversals.",raw:"I believe it ultimately depends on defining the scope of decision-making for our leaders. At its core, this is a conversation about empowerment and trust. When we build a culture where we trust experienced leaders and empower them to make the call, it will naturally minimize second-guessing and reversed decisions.",ko:"결국 리더의 의사결정 범위를 정의하는 문제라고 봅니다. 본질적으로는 권한 위임과 신뢰에 관한 이야기입니다. 경험 있는 리더를 믿고 결정권을 주는 문화를 만들면 재검토와 번복은 자연히 줄어들 것입니다."}],
+ 11:[{name:"Sim Kyosun",q:"MP",memo:"I believe the cause is a lack of communication between team leads and the managers above them, and the absence of a clear purpose for initiatives. Given that overall there is no team with extremely high actual working hours, I think the root cause is the absence of alignment across Team, MLT, MANCOM and Global.",raw:"팀장과 그 위 manager등간의 소통 부재, 명확한 Initiative 목적에 대한 부재가 원인이라고 생각합니다. 전반적으로 실제 근무시간이 아주 높은 팀은 없다는것으로 보아, Team, MLT, MANCOM, Global 간의 alignment 부재가 원인이라고 생각 합니다."},
+    {name:"Wongi Ryu",q:"QW",memo:"Prioritising non-essential work is key. Clear R&R would also prevent excessive load landing on one team.",raw:"I believe effective prioritization of non-essential tasks is crucial. Alternatively, clearly defining roles and responsibilities (R&R) would help prevent an excessive workload from being assigned to a single team or individual in a short period.",ko:"비핵심 업무의 우선순위를 효과적으로 정리하는 것이 중요합니다. 또는 역할과 책임(R&R)을 명확히 정의하면 짧은 기간에 특정 팀이나 개인에게 과도한 업무가 몰리는 것을 막을 수 있습니다."}],
+ 12:[{name:"Sim Kyosun",q:"RC",memo:"Because of internal compliance issues, I think there is a large gap between those who go through the procedures continuously and are familiar with them and those who are not. But even if it feels complex, the limits to changing internal procedures look clear.",raw:"내부 complience 이슈로 사실 절차를 지속 진행해서 익숙한 사람과 그렇지 않은 사람간의 GAP 이 크다고 생각됩니다. 다면 복잡하다고 생각이 들어도 내부절체를 변경하는 데에는 한계가 뚜렸해 보입니다."},
+    {name:"Wongi Ryu",q:"MP",memo:"Overhauling procurement won't be easy short term, but if we manage it, the operational gain would be massive.",raw:"Overhauling the company's procurement system won't be easy in the short term. However, if we can manage to do it, I believe it will drive massive operational efficiency.",ko:"회사의 구매 시스템을 단기간에 개편하기는 쉽지 않을 것입니다. 다만 해낼 수 있다면 엄청난 운영 효율을 만들어낼 것이라고 봅니다."}],
+ 13:[{name:"Sim Kyosun",q:"MP",memo:"Over the past few years the team structure has changed several times, large and small, but I think there have been cases where the structure was created without a clear R&R being set up.",raw:"최근 몇 년간 크게 작게 여러번 팀의 구조가 바뀌었지만, 명확한 R&R이 Set up 되지 않은 상태에서 Structure 가 만들어 진 경우도 있다고 생각합니다."},
+    {name:"Wongi Ryu",q:"QW",memo:"A leadership-level issue. List the grey-area tasks, discuss with the relevant leaders, and refine R&Rs.",raw:"I believe this is an issue that needs to be addressed at the leadership level. At times, it stems from a lack of familiarization with the team's detailed scope of work, or insufficient communication among leaders. We can resolve this by listing out tasks in the gray areas, discussing them with the relevant stakeholders or leaders, and refining our R&Rs.",ko:"리더십 레벨에서 다뤄야 할 문제라고 봅니다. 때로는 팀의 세부 업무 범위에 대한 이해 부족이나 리더 간 소통 부족에서 비롯됩니다. 회색지대에 있는 업무를 리스트업하고 관련 이해관계자나 리더와 논의하여 R&R을 다듬으면 해결할 수 있습니다."}],
+ 14:[{name:"Sim Kyosun",q:"FI",memo:"I actually think the training and induction at onboarding are done well. However, if someone attends the training without any background, the input is there but it can be hard to understand. Training after joining should continue, but it would help to also run regular sessions within the team on the communication and topics that are actually needed.",raw:"on-boarding 시 교육이나 Induction은 사실 잘 이루어 진다고 생각합니다. 다만 아무런 Background가 없이 교육을 듣게 되는 경우 Input은 있어도 이해가 어려울 수 있다고 생각합니다. 입사 후 교육은 진행하되 팀 내부적으로 필요한 소통 및 주제에 따른 정기적인 교육을 한다면 도움이 될 것 같습니다."},
+    {name:"Wongi Ryu",q:"QW",memo:"At my previous company onboarding ran a full week. If leaders and HR design structured training together, this is solvable.",raw:"At my previous company, onboarding lasted for a full week. If team leaders—alongside HR—actively design and deliver structured training for new hires, we can address the current friction in our onboarding process.",ko:"이전 회사에서는 온보딩이 일주일간 진행되었습니다. 팀 리더가 HR과 함께 신규 입사자를 위한 구조화된 교육을 적극적으로 설계하고 제공한다면, 현재의 온보딩 마찰을 해소할 수 있습니다."}],
+ 15:[{name:"Sim Kyosun",q:"RC",memo:"I suspect much of it simply comes from the frustration of not having it. Currently some functions can be used internally through Copilot, but the level of use seems to vary greatly from person to person and overall I would say it is low. It is certainly an area that needs continuous training, but solving it right away looks difficult.",raw:"단순히 없는 것에 대한 답답함에서 오는 것이 크지 않나 싶습니다. 현재 내부적으로 일부 기능은 Co-pliot을 활용 할수 있으나 활용도는 사람 마나 무척 다른 것 같고 전반적으로는 낮은 수준으로 생각 됩니다. 지속적인 교육이 필요한 영역은 맞으나, 당장 해결하기에는 어려움이 예상됨."},
+    {name:"Wongi Ryu",q:"QW",memo:"AI is inevitable — falling behind risks irrelevance. Secure access and budget, and build a culture of safe usage through training.",raw:"AI has become an inevitable trend, and falling behind in leveraging it means risking irrelevance. We need to make essential AI tools as accessible as possible and secure an adequate budget for them. At the same time, we must foster a culture of 'safe usage' by providing structured training on best practices and security guidelines.",ko:"AI는 피할 수 없는 흐름이 되었고, 활용에서 뒤처진다는 것은 도태를 의미합니다. 필수 AI 도구의 접근성을 최대한 확보하고 충분한 예산을 마련해야 합니다. 동시에 모범 사례와 보안 가이드라인에 대한 체계적 교육을 제공해 '안전한 사용' 문화를 만들어야 합니다."}],
+ 16:[{name:"Sim Kyosun",q:"RC",memo:"It would be good to understand how much of this is reporting for the sake of reporting, and meetings for the sake of meetings. I often see cases where several teams repeat meetings without a clear purpose or conclusion. On this, team leads and MLT need training so that they clarify the purpose of the meeting and how alignment should be reached, in order to avoid repeated meetings on the same topic.",raw:"보고를 위한 보고, 미팅을 위한 미팅이 얼마나 되는지 파악을 하면 좋을 것 같습니다. 가끔 여러 팀들이 목적과 결론이 없이 미팅이 반복되는 경우를 많이 봅니다. 이 부분은 팀장과 MLT가 해당 미팅에서 목적을 명확히 하고, 어떻게 Align을 해야 할지를 명확히 하여 동일한 주제로 반복적인 미팅을 피할 수 있도록 교육이 필요할 것 같습니다."},
+    {name:"Wongi Ryu",q:"MP",memo:"Judging what needs a meeting versus written comms is a leadership call. Cutting frequency will boost productivity, but defining 'unnecessary' takes effort.",raw:"While in-person meetings are certainly necessary at times, deciding whether a discussion requires a meeting or can be replaced by written updates or online comms requires leadership judgment. Reducing the frequency and duration of meetings will undoubtedly boost productivity, though defining which meetings are truly unnecessary will take some deliberate effort.",ko:"대면 미팅이 필요한 때도 분명 있지만, 어떤 논의가 미팅을 요하는지 아니면 서면이나 온라인 소통으로 대체 가능한지 판단하는 것은 리더십의 몫입니다. 미팅의 빈도와 시간을 줄이면 생산성은 분명 올라가지만, 어떤 미팅이 정말 불필요한지 정의하는 데는 의도적인 노력이 필요합니다."}]
+};
+
+/* ══════════ STATE ══════════ */
+const S = {
+  focus: 1,
+  consensus: {},      // n -> quadId
+  trees: {},          // n -> [{id,parent,text,core}]
+  inits: {},          // n -> [{text,type,timing,owner}]
+  status: {}          // n -> 'agree'|'split'|'later'
+};
+let uid = 1;
+
+/* ══════════ AUTOSAVE (browser local storage) ══════════ */
+const SKEY='mode_workshop_state_v1';
+let saveTimer=null, lastSave=null;
+function save(){
+  try{
+    localStorage.setItem(SKEY, JSON.stringify({...S, _uid:uid, _at:Date.now()}));
+    lastSave=new Date();
+    const el=document.getElementById('saveInd');
+    if(el){
+      el.textContent='Saved '+lastSave.toTimeString().slice(0,5);
+      el.classList.add('flash');
+      setTimeout(()=>el.classList.remove('flash'),600);
+    }
+  }catch(e){
+    const el=document.getElementById('saveInd');
+    if(el){ el.textContent='Save failed'; el.style.color='var(--red)'; }
+  }
+}
+function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); }
+function restore(){
+  try{
+    const raw=localStorage.getItem(SKEY);
+    if(!raw) return false;
+    const d=JSON.parse(raw);
+    S.focus=d.focus||1; S.consensus=d.consensus||{};
+    S.trees=d.trees||{}; S.inits=d.inits||{};
+    if(d.status) S.status=d.status;
+    uid=d._uid||100;
+    return d._at||true;
+  }catch(e){ return false; }
+}
+
+/* Auto-classify status from pre-work responses */
+function classify(n){
+  const r = PRE[n]||[];
+  if(!r.length) return 'later';
+  const c={}; r.forEach(x=>c[x.q]=(c[x.q]||0)+1);
+  const top = Math.max(...Object.values(c));
+  const ratio = top / r.length;
+  if(ratio >= 0.75) return 'agree';
+  return 'split';
+}
+ISSUES.forEach(i=>{ S.status[i.n] = classify(i.n); });
+
+/* ══════════ NAV ══════════ */
+document.querySelectorAll('.navtab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.navtab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById(b.dataset.view).classList.add('on');
+    if(b.dataset.view==='v3') renderP3();
+    if(b.dataset.view==='v1') renderP1();
+    window.scrollTo(0,0);
+  });
+});
+function goto(view){ document.querySelector(`.navtab[data-view=${view}]`).click(); }
+
+/* ══════════ TIMER ══════════ */
+let tSec=24*60, tOn=false, tInt=null;
+function tRender(){
+  const m=String(Math.floor(Math.abs(tSec)/60)).padStart(2,'0');
+  const s=String(Math.abs(tSec)%60).padStart(2,'0');
+  const d=document.getElementById('tDisp');
+  d.textContent=(tSec<0?'-':'')+m+':'+s;
+  d.classList.toggle('warn', tSec<=60);
+}
+document.getElementById('tPlay').addEventListener('click',e=>{
+  tOn=!tOn; e.target.textContent = tOn?'❚❚':'▶';
+  if(tOn){ tInt=setInterval(()=>{tSec--;tRender();},1000); }
+  else clearInterval(tInt);
+});
+document.getElementById('tReset').addEventListener('click',()=>{
+  tSec=24*60; tRender();
+});
+document.getElementById('tPlus').addEventListener('click',()=>{tSec+=60;tRender();});
+document.getElementById('tMinus').addEventListener('click',()=>{tSec-=60;tRender();});
+tRender();
+
+/* ══════════ PART 1 ══════════ */
+function renderP1(){
+  const cnt={agree:0,split:0,later:0};
+  ISSUES.forEach(i=>cnt[S.status[i.n]]++);
+  document.getElementById('p1stats').innerHTML =
+    `<div class="stat"><div class="sn">${cnt.agree}</div><div class="sl">Aligned — quick check</div></div>
+     <div class="stat"><div class="sn">${cnt.split}</div><div class="sl">Split — deep dive</div></div>
+     <div class="stat"><div class="sn">${16-Object.keys(S.consensus).length}</div><div class="sl">Remaining</div></div>
+     <div class="stat"><div class="sn">${Object.keys(S.consensus).length}</div><div class="sl">Quadrants agreed</div></div>`;
+
+  const byAx={};
+  ISSUES.forEach(i=>{ (byAx[i.ax]=byAx[i.ax]||[]).push(i); });
+  const AXN={P1:"Time Allocation",P2:"Work Priority Alignment",P3:"Org Effectiveness",P4:"Voice of Employee"};
+  const AXE={P1:"P1",P2:"P2",P3:"P3",P4:"P4"};
+
+  document.getElementById('issueGrid').innerHTML = Object.keys(byAx).map(ax=>`
+    <div class="axisrow">
+      <div class="axishead"><span class="ptag">${ax}</span>
+        <span class="axisname">${AXN[ax]}</span>
+        </div>
+      <div class="igrid">${byAx[ax].map(i=>icard(i)).join('')}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.icard').forEach(c=>{
+    c.addEventListener('click',()=>{ S.focus=+c.dataset.n; renderP2(); goto('v2'); });
+  });
+}
+function icard(i){
+  const r=PRE[i.n]||[];
+  const c={QW:0,MP:0,FI:0,RC:0}; r.forEach(x=>c[x.q]++);
+  const tot=r.length||1;
+  const bar=['QW','MP','FI','RC'].map(k=>
+    c[k]?`<i style="width:${c[k]/tot*100}%;background:${QUADS[k].color}"></i>`:'').join('');
+  const st=S.status[i.n];
+  const stl={agree:'Aligned',split:'Split',later:'No data'}[st];
+  const done=S.consensus[i.n];
+  return `<div class="icard ${S.focus===i.n?'focus':''}" data-n="${i.n}">
+    <span class="statechip st-${st}">${stl}</span>
+    <div class="inum">${String(i.n).padStart(2,'0')}</div>
+    <div class="ittl">${i.t}</div>
+    <div class="ibar">${bar||'<i style="width:100%;background:var(--panel3)"></i>'}</div>
+    <div class="imeta"><span>${r.length} responses</span>
+      <span>${done?QUADS[done].name:'—'}</span></div>
+  </div>`;
+}
+
+/* ══════════ PART 2 ══════════ */
+function renderP2(){
+  const n=S.focus, iss=ISSUES.find(x=>x.n===n);
+
+  document.getElementById('qnav').innerHTML = ISSUES.map(i=>
+    `<button class="qchip ${i.n===n?'on':''} ${S.consensus[i.n]?'done':''}" data-n="${i.n}">${i.n}</button>`).join('');
+  document.querySelectorAll('.qchip').forEach(b=>b.addEventListener('click',()=>{
+    S.focus=+b.dataset.n; queueSave(); renderP2(); window.scrollTo(0,0);
+  }));
+
+  document.getElementById('ddTitle').textContent = `${String(n).padStart(2,'0')}. ${iss.t}`;
+  document.getElementById('ddDesc').textContent = iss.d;
+
+  // distribution
+  const r=PRE[n]||[]; const c={QW:0,MP:0,FI:0,RC:0}; r.forEach(x=>c[x.q]++);
+  document.getElementById('distRow').innerHTML = ['QW','MP','FI','RC'].map(k=>
+    `<div class="dcell ${k.toLowerCase()}"><div class="dn">${c[k]}</div>
+     <div class="dl">${QUADS[k].name.split(' ')[0]}</div></div>`).join('');
+
+  document.getElementById('opinList').innerHTML = r.length ? r.map(o=>{
+    const isKo = /[가-힣]/.test(o.raw||'');
+    return `<div class="opin"><div class="oh"><span class="oname">${o.name}</span>
+      <span class="oq ${o.q}">${QUADS[o.q].name}</span></div>
+     <div class="oraw">${(o.raw||o.memo).replace(/\n/g,'<br>')}</div>
+     ${isKo
+        ? `<div class="otx"><span class="tlabel">EN</span>${(o.memo||'').replace(/\n/g,'<br>')}</div>`
+        : (o.ko ? `<div class="otx"><span class="tlabel">KO</span>${(o.ko||'').replace(/\n/g,'<br>')}</div>` : '')}
+     </div>`;}).join('')
+    : '<div class="empty">No responses yet</div>';
+
+  // consensus picker
+  document.getElementById('qPick').innerHTML = ['QW','MP','FI','RC'].map(k=>
+    `<button class="qp ${S.consensus[n]===k?'sel':''}" data-q="${k}">
+      <span class="qpn">${QUADS[k].name}</span>
+      <span class="qpd">${QUADS[k].desc}</span></button>`).join('');
+  document.querySelectorAll('.qp').forEach(b=>b.addEventListener('click',()=>{
+    S.consensus[n]=b.dataset.q; queueSave(); renderP2();
+  }));
+
+  renderTree(); renderInits();
+
+  // progress
+  const doneN=Object.keys(S.consensus).length;
+  const initN=Object.values(S.inits).reduce((a,v)=>a+(v||[]).filter(x=>x.text).length,0);
+  document.getElementById('ddProg').innerHTML =
+    `Issue <b>${n}</b> of 16　·　<b>${doneN}</b> agreed　·　<b>${initN}</b> initiatives`;
+  document.getElementById('btnPrev').disabled = (n<=1);
+  document.getElementById('btnNext').textContent = (n>=16) ? 'Go to wrap-up →' : 'Next issue →';
+}
+
+/* ── Why Tree ── */
+function tree(n){
+  if(!S.trees[n]) S.trees[n]=[{id:uid++,parent:null,text:ISSUES.find(x=>x.n===n).t,core:false}];
+  return S.trees[n];
+}
+function renderTree(){
+  const n=S.focus, nodes=tree(n);
+  // compute depth
+  const depth={}; nodes.forEach(x=>{
+    let d=0,p=x.parent;
+    while(p!==null){ d++; p=nodes.find(y=>y.id===p)?.parent ?? null; }
+    depth[x.id]=d;
+  });
+  const maxD=Math.max(...Object.values(depth));
+  let html='';
+  for(let d=0; d<=maxD; d++){
+    const col=nodes.filter(x=>depth[x.id]===d);
+    if(d>0) html+=`<div class="tconn"><svg preserveAspectRatio="none" viewBox="0 0 34 100">
+      <path d="M0 50 H12 M12 8 V92 M12 8 H34 M12 50 H34 M12 92 H34" stroke="#5A5A5A" stroke-width="1.5" fill="none"/></svg></div>`;
+    html+=`<div class="tcol">`+col.map(x=>{
+      const isRoot = x.parent===null;
+      return `<div class="tnode ${isRoot?'root':''} ${x.core?'core':''}" data-id="${x.id}">
+        <div class="ttx" contenteditable="true" data-id="${x.id}">${x.text}</div>
+        <div class="tacts">
+          <button class="tact add" data-id="${x.id}">+ Cause</button>
+          ${isRoot?'':`<button class="tact mark" data-id="${x.id}">${x.core?'★ Root':'Mark root'}</button>
+          <button class="tact del" data-id="${x.id}">Delete</button>`}
+        </div></div>`;
+    }).join('')+`</div>`;
+  }
+  document.getElementById('tree').innerHTML=html;
+
+  document.querySelectorAll('.tact.add').forEach(b=>b.addEventListener('click',()=>{
+    nodes.push({id:uid++,parent:+b.dataset.id,text:'Enter a cause',core:false}); queueSave(); renderTree();
+  }));
+  document.querySelectorAll('.tact.mark').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.dataset.id; const nd=nodes.find(x=>x.id===id);
+    nodes.forEach(x=>{ if(x.id!==id) x.core=false; });
+    nd.core=!nd.core; queueSave(); renderTree();
+  }));
+  document.querySelectorAll('.tact.del').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.dataset.id;
+    const rm=[id]; let changed=true;
+    while(changed){ changed=false;
+      nodes.forEach(x=>{ if(x.parent!==null&&rm.includes(x.parent)&&!rm.includes(x.id)){rm.push(x.id);changed=true;} });
+    }
+    S.trees[S.focus]=nodes.filter(x=>!rm.includes(x.id)); queueSave(); renderTree();
+  }));
+  document.querySelectorAll('.ttx').forEach(el=>{
+    el.addEventListener('blur',()=>{
+      const nd=nodes.find(x=>x.id===+el.dataset.id);
+      if(nd){ nd.text=el.textContent.trim()||'(empty)'; queueSave(); }
+    });
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();el.blur();} });
+  });
+}
+
+/* ── Initiatives ── */
+function renderInits(){
+  const n=S.focus;
+  document.getElementById('typeList').innerHTML = TYPES.map(t=>`<option value="${t}">`).join('');
+  document.getElementById('timingList').innerHTML = TIMING.map(t=>`<option value="${t}">`).join('');
+  if(!S.inits[n]) S.inits[n]=[];
+  const rows=S.inits[n];
+  document.getElementById('initBody').innerHTML = rows.length ? rows.map((r,i)=>`
+    <tr>
+      <td><input data-i="${i}" data-f="text" value="${r.text||''}" placeholder="Action item"></td>
+      <td><input list="typeList" data-i="${i}" data-f="type" value="${r.type||''}"
+        placeholder="Select or type"></td>
+      <td><input list="timingList" data-i="${i}" data-f="timing" value="${r.timing||''}"
+        placeholder="Select or type"></td>
+      <td><input data-i="${i}" data-f="owner" value="${r.owner||''}" placeholder="Owner"></td>
+      <td><button class="rmb" data-i="${i}">×</button></td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">None yet</td></tr>`;
+
+  document.querySelectorAll('#initBody input,#initBody select').forEach(el=>{
+    el.addEventListener('change',()=>{ rows[+el.dataset.i][el.dataset.f]=el.value; queueSave(); });
+    el.addEventListener('input',()=>{ rows[+el.dataset.i][el.dataset.f]=el.value; queueSave(); });
+  });
+  document.querySelectorAll('.rmb').forEach(b=>b.addEventListener('click',()=>{
+    rows.splice(+b.dataset.i,1); queueSave(); renderInits();
+  }));
+}
+document.getElementById('addInit').addEventListener('click',()=>{
+  const n=S.focus; if(!S.inits[n]) S.inits[n]=[];
+  S.inits[n].push({text:'',type:'',timing:'',owner:''}); queueSave(); renderInits();
+});
+
+/* ══════════ PART 3 ══════════ */
+function renderP3(){
+  const all=[];
+  ISSUES.forEach(i=>{ (S.inits[i.n]||[]).forEach(r=>{ if(r.text) all.push({...r,src:i}); }); });
+  const later=ISSUES.filter(i=>!S.consensus[i.n]);
+
+  document.getElementById('p3stats').innerHTML =
+    `<div class="stat"><div class="sn">${all.length}</div><div class="sl">Initiatives</div></div>
+     <div class="stat"><div class="sn">${Object.keys(S.consensus).length}</div><div class="sl">Quadrants agreed</div></div>
+     <div class="stat"><div class="sn">${all.filter(r=>r.owner).length}</div><div class="sl">Owners assigned</div></div>
+     <div class="stat"><div class="sn">${later.length}</div><div class="sl">Carried forward</div></div>`;
+
+  document.getElementById('sumBody').innerHTML = all.length ? all.map((r,i)=>`
+    <tr><td>${i+1}</td><td><b>${r.text}</b></td>
+    <td style="color:var(--dim);font-size:12px">${String(r.src.n).padStart(2,'0')}. ${r.src.t}</td>
+    <td>${r.type?`<span class="tagchip">${r.type}</span>`:'—'}</td>
+    <td style="font-size:12px">${r.timing||'—'}</td>
+    <td>${r.owner||'<span style="color:var(--red)">Unassigned</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty">No initiatives yet</td></tr>`;
+
+  document.getElementById('laterBody').innerHTML = later.length ? later.map((i,k)=>`
+    <tr><td>${k+1}</td><td>${String(i.n).padStart(2,'0')}. ${i.t}</td>
+    <td>${S.consensus[i.n]?QUADS[S.consensus[i.n]].name:'—'}</td>
+    <td style="color:var(--dim)">${S.status[i.n]==='later'?'No pre-work response':'Not yet discussed'}</td></tr>`).join('')
+    : `<tr><td colspan="4" class="empty">All issues addressed</td></tr>`;
+}
+
+/* ══════════ EXPORT ══════════ */
+document.getElementById('expJson').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`MODE_workshop_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+});
+document.getElementById('expCsv').addEventListener('click',()=>{
+  const rows=[['Issue No','Issue','Initiative','Type','Timing','Owner','Agreed Quadrant']];
+  ISSUES.forEach(i=>(S.inits[i.n]||[]).forEach(r=>{
+    if(r.text) rows.push([i.n,i.t,r.text,r.type||'',r.timing||'',r.owner||'',
+      S.consensus[i.n]?QUADS[S.consensus[i.n]].name:'']);
+  }));
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`MODE_initiatives_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+document.getElementById('loadJson').addEventListener('click',()=>document.getElementById('fileIn').click());
+document.getElementById('fileIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    const d=JSON.parse(rd.result);
+    Object.assign(S,d);
+    uid = Math.max(100, ...Object.values(S.trees||{}).flat().map(x=>x.id||0))+1;
+    save(); renderP1(); renderP2(); renderP3();
+    alert('Imported.');
+  }catch(err){ alert('Could not read the file.'); } };
+  rd.readAsText(f);
+});
+
+/* ══════════ GOOGLE SHEET SAVE ══════════ */
+/* Paste your Apps Script web app URL here */
+const SHEET_ENDPOINT = "PASTE_WORKSHOP_APPS_SCRIPT_URL_HERE";
+
+async function pushToSheet(silent){
+  const ind=document.getElementById('cloudInd');
+  if(!SHEET_ENDPOINT || SHEET_ENDPOINT.startsWith('PASTE')){
+    if(ind && !silent) ind.textContent='Sheet not connected';
+    return false;
+  }
+  if(ind) { ind.textContent='Saving to sheet...'; ind.className='cloudind'; }
+  const payload={
+    savedAt:new Date().toISOString(),
+    consensus:S.consensus,
+    trees:S.trees,
+    inits:S.inits,
+    issues:ISSUES.map(i=>({no:i.n,axis:i.ax,title:i.t}))
+  };
+  try{
+    await fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)});
+    if(ind){ ind.textContent='Sheet saved '+new Date().toTimeString().slice(0,5); ind.className='cloudind ok'; }
+    return true;
+  }catch(e){
+    if(ind){ ind.textContent='Sheet save failed'; ind.className='cloudind err'; }
+    return false;
+  }
+}
+
+/* ══════════ ISSUE NAVIGATION ══════════ */
+function moveTo(n){
+  if(n<1||n>16) return;
+  S.focus=n; queueSave(); renderP2(); window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('btnPrev').addEventListener('click',()=>moveTo(S.focus-1));
+document.getElementById('btnNext').addEventListener('click',async ()=>{
+  const b=document.getElementById('btnNext');
+  b.classList.add('saving'); b.textContent='Saving...';
+  save();
+  await pushToSheet(true);
+  b.classList.remove('saving'); b.textContent='Next issue →';
+  if(S.focus>=16){ renderP3(); goto('v3'); } else moveTo(S.focus+1);
+});
+document.getElementById('btnSaveNow').addEventListener('click',async ()=>{
+  const b=document.getElementById('btnSaveNow');
+  b.disabled=true; b.textContent='Saving...';
+  save();
+  await pushToSheet();
+  b.disabled=false; b.textContent='Save now';
+});
+
+/* ══════════ RESET ══════════ */
+document.getElementById('clearAll').addEventListener('click',()=>{
+  if(!confirm('This will clear all entries and start over.\nContinue?')) return;
+  localStorage.removeItem(SKEY);
+  S.focus=1; S.consensus={}; S.trees={}; S.inits={}; uid=1;
+  ISSUES.forEach(i=>{ S.status[i.n]=classify(i.n); });
+  document.getElementById('saveInd').textContent='Reset';
+  renderP1(); renderP2(); renderP3();
+});
+
+/* ══════════ UNLOAD WARNING ══════════ */
+window.addEventListener('beforeunload', e=>{
+  const has = Object.keys(S.consensus).length ||
+              Object.values(S.inits).some(a=>a && a.length) ||
+              Object.keys(S.trees).length;
+  if(has){ e.preventDefault(); e.returnValue=''; }
+});
+
+/* ══════════ INIT ══════════ */
+const restored = restore();
+renderP1(); renderP2();
+if(restored){
+  const t = typeof restored==='number' ? new Date(restored) : null;
+  document.getElementById('saveInd').textContent =
+    t ? 'Restored '+t.toTimeString().slice(0,5) : 'Restored';
+} else {
+  document.getElementById('saveInd').textContent='Autosave on';
+}
+setInterval(save, 30000);
+</script>
+</body>
+</html>
