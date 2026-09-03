@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MODE Action Planning Workshop</title>
+<style>
+:root{
+  --bg:#0A0A0A; --panel:#141414; --panel2:#1C1C1C; --panel3:#252525;
+  --line:#303030; --gold:#FFD200; --goldd:#8A7100;
+  --white:#F0F0F0; --grey:#C9C9C9; --dim:#8E8E8E;
+  --qw:#3FB950; --mp:#4C9AFF; --fi:#B8B8B8; --rc:#FFD200;
+  --red:#E8533F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--white);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",-apple-system,sans-serif;
+  line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+
+/* ── top bar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;background:rgba(10,10,10,.97);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:18px;padding:12px 26px;
+}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.brand b{color:var(--gold)}
+.navtabs{display:flex;gap:6px;margin-left:8px}
+.navtab{
+  background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s;
+}
+.navtab.on{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.navtab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.spacer{flex:1}
+.saveind{font-size:11.5px;color:var(--dim);white-space:nowrap;transition:color .3s}
+.saveind.flash{color:var(--qw)}
+.timer{
+  display:flex;align-items:center;gap:10px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:8px;padding:6px 12px;
+}
+.tdisp{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--gold);min-width:62px;text-align:center;letter-spacing:.02em}
+.tdisp.warn{color:var(--red)}
+.tbtn{background:none;border:1px solid var(--line);color:var(--grey);
+  width:28px;height:26px;border-radius:5px;cursor:pointer;font-size:12px;font-family:inherit}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── layout ── */
+.view{display:none;padding:26px}
+.view.on{display:block}
+.wide{max-width:1600px;margin:0 auto}
+
+h2.vt{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.vsub{font-size:14px;color:var(--dim);margin-bottom:22px}
+
+/* ── PART 1 : issue grid ── */
+.axisrow{margin-bottom:18px}
+.axishead{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.ptag{background:var(--gold);color:#0A0A0A;font-weight:800;font-size:11px;
+  padding:3px 9px;border-radius:4px}
+.axisname{font-size:14px;font-weight:700}
+.axissub{font-size:12px;color:var(--dim)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:9px}
+.icard{
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:13px 15px;cursor:pointer;transition:.15s;position:relative;
+}
+.icard:hover{border-color:var(--goldd)}
+.icard.focus{border-color:var(--gold);background:#1E1900}
+.icard .inum{font-size:11px;font-weight:800;color:var(--dim);
+  font-variant-numeric:tabular-nums}
+.icard .ittl{font-size:13.5px;font-weight:600;margin-top:3px;line-height:1.4}
+.icard .ibar{display:flex;gap:2px;margin-top:9px;height:5px;border-radius:3px;overflow:hidden}
+.icard .ibar i{display:block;height:100%}
+.icard .imeta{font-size:10.5px;color:var(--dim);margin-top:6px;
+  display:flex;justify-content:space-between}
+.statechip{position:absolute;top:11px;right:12px;font-size:9.5px;font-weight:800;
+  padding:2px 7px;border-radius:10px;letter-spacing:.03em}
+.st-agree{background:#14361B;color:var(--qw)}
+.st-split{background:#3A2E00;color:var(--gold)}
+.st-later{background:var(--panel3);color:var(--dim)}
+
+/* ── PART 2 : deep dive ── */
+.dd{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+.ddleft{position:sticky;top:78px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:18px 20px;margin-bottom:14px}
+.panel h3{font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.06em;
+  margin-bottom:12px;text-transform:uppercase}
+
+.qnav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.qchip{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+  width:34px;height:32px;border-radius:6px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:inherit}
+.qchip.on{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.qchip.done{border-color:var(--qw);color:var(--qw)}
+
+.ddtitle{font-size:22px;font-weight:800;line-height:1.35;margin-bottom:8px}
+.dddesc{font-size:13.5px;color:var(--grey);line-height:1.6;
+  padding-left:12px;border-left:2px solid var(--panel3);margin-bottom:18px}
+
+/* distribution */
+.distrow{display:flex;gap:8px;margin-bottom:14px}
+.dcell{flex:1;background:var(--panel2);border:1px solid var(--line);
+  border-radius:8px;padding:10px 11px;text-align:center}
+.dcell .dn{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.dcell .dl{font-size:10px;font-weight:700;margin-top:2px;letter-spacing:.02em}
+.dcell.qw .dn,.dcell.qw .dl{color:var(--qw)}
+.dcell.mp .dn,.dcell.mp .dl{color:var(--mp)}
+.dcell.fi .dn,.dcell.fi .dl{color:var(--fi)}
+.dcell.rc .dn,.dcell.rc .dl{color:var(--rc)}
+
+.opinions{max-height:340px;overflow-y:auto}
+.opin{padding:9px 0;border-bottom:1px solid var(--line)}
+.opin:last-child{border:none}
+.opin .oh{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.opin .oname{font-size:12px;font-weight:700}
+.opin .oq{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:8px}
+.oq.QW{background:#14361B;color:var(--qw)} .oq.MP{background:#122A47;color:var(--mp)}
+.oq.FI{background:#2A2A2A;color:var(--fi)} .oq.RC{background:#3A2E00;color:var(--rc)}
+.opin .otx{font-size:12px;color:var(--grey);line-height:1.5}
+
+/* consensus picker */
+.qpick{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qp{background:var(--panel2);border:2px solid var(--line);border-radius:9px;
+  padding:14px;cursor:pointer;font-family:inherit;text-align:center;transition:.15s}
+.qp:hover{border-color:var(--goldd)}
+.qp .qpn{font-size:13px;font-weight:800;color:var(--white);display:block}
+.qp .qpd{font-size:10.5px;color:var(--dim);margin-top:3px;display:block}
+.qp.sel[data-q=QW]{background:var(--qw);border-color:var(--qw)}
+.qp.sel[data-q=MP]{background:var(--mp);border-color:var(--mp)}
+.qp.sel[data-q=FI]{background:var(--fi);border-color:var(--fi)}
+.qp.sel[data-q=RC]{background:var(--rc);border-color:var(--rc)}
+.qp.sel .qpn,.qp.sel .qpd{color:#0A0A0A}
+
+/* ── why tree (horizontal) ── */
+.treewrap{overflow-x:auto;padding:6px 2px 12px}
+.tree{display:flex;align-items:flex-start;gap:0;min-width:min-content}
+.tcol{display:flex;flex-direction:column;justify-content:center;gap:10px}
+.tnode{
+  background:var(--panel2);border:1.5px solid var(--line);border-radius:8px;
+  padding:10px 13px;min-width:190px;max-width:230px;position:relative;
+}
+.tnode.root{border-color:var(--red);background:#1A0806}
+.tnode.core{border-color:var(--red);background:#2A0A06;box-shadow:0 0 0 2px rgba(232,83,63,.18)}
+.tnode .ttx{font-size:12.5px;font-weight:600;line-height:1.4;
+  outline:none;min-height:18px}
+.tnode .ttx:focus{color:var(--gold)}
+.tnode .tacts{display:flex;gap:5px;margin-top:8px;opacity:.55}
+.tnode:hover .tacts{opacity:1}
+.tact{background:none;border:1px solid var(--line);color:var(--dim);
+  font-size:10px;padding:2px 7px;border-radius:5px;cursor:pointer;font-family:inherit}
+.tact:hover{border-color:var(--gold);color:var(--gold)}
+.tact.mark:hover{border-color:var(--red);color:var(--red)}
+.tconn{width:34px;align-self:stretch;position:relative;flex-shrink:0;min-height:60px}
+.tconn svg{position:absolute;inset:0;width:100%;height:100%}
+
+/* initiatives */
+.inits{width:100%;border-collapse:collapse}
+.inits th{font-size:10.5px;font-weight:800;color:var(--gold);text-align:left;
+  padding:7px 9px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.inits td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.inits input,.inits select{
+  width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--white);
+  padding:8px 10px;border-radius:6px;font-size:12.5px;font-family:inherit}
+.inits input:focus,.inits select:focus{outline:2px solid var(--gold);outline-offset:0;border-color:transparent}
+.rmb{background:none;border:none;color:var(--dim);cursor:pointer;font-size:15px;padding:2px 6px}
+.rmb:hover{color:var(--red)}
+.addb{background:var(--panel2);border:1px dashed var(--line);color:var(--grey);
+  padding:9px 16px;border-radius:7px;font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;margin-top:10px}
+.addb:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── PART 3 ── */
+.sumtable{width:100%;border-collapse:collapse;font-size:13px}
+.sumtable th{font-size:11px;font-weight:800;color:var(--gold);text-align:left;
+  padding:9px 11px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.sumtable td{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+.tagchip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;
+  background:var(--panel3);color:var(--grey);white-space:nowrap}
+.qbadge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px}
+.stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:14px 20px;min-width:130px}
+.stat .sn{font-size:28px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat .sl{font-size:11.5px;color:var(--dim);margin-top:2px}
+
+.exportbar{display:flex;gap:9px;margin-top:20px}
+.ebtn{background:var(--gold);color:#0A0A0A;border:none;padding:11px 22px;
+  border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
+.ebtn.ghost{background:none;border:1px solid var(--line);color:var(--grey)}
+.ebtn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+.actbar{display:flex;align-items:center;gap:10px;margin-top:16px;
+  padding:14px 20px;background:var(--panel);border:1px solid var(--line);border-radius:11px}
+.actbar .prog{flex:1;font-size:12.5px;color:var(--dim)}
+.actbar .prog b{color:var(--gold)}
+.nbtn{background:var(--panel2);border:1px solid var(--line);color:var(--grey);
+  padding:11px 20px;border-radius:8px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.nbtn:hover{border-color:var(--gold);color:var(--gold)}
+.nbtn.primary{background:var(--gold);border-color:var(--gold);color:#0A0A0A}
+.nbtn.primary:hover{background:#FFE45C}
+.nbtn:disabled{opacity:.35;cursor:not-allowed}
+.nbtn.saving{background:var(--panel3);color:var(--dim)}
+.cloudind{font-size:11px;color:var(--dim);white-space:nowrap}
+.cloudind.ok{color:var(--qw)} .cloudind.err{color:var(--red)}
+.empty{color:var(--dim);font-size:13px;padding:26px 0;text-align:center;font-style:italic}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><b>MODE</b> Action Planning</div>
+  <div class="navtabs">
+    <button class="navtab on" data-view="v1">1 · Overview</button>
+    <button class="navtab" data-view="v2">2 · Deep Dive</button>
+    <button class="navtab" data-view="v3">3 · Wrap-up</button>
+  </div>
+  <div class="spacer"></div>
+  <span class="saveind" id="saveInd">Ready</span>
+  <button class="tbtn" id="clearAll" title="Start over" style="width:auto;padding:0 10px">Reset</button>
+  <div class="timer">
+    <button class="tbtn" id="tMinus">−</button>
+    <span class="tdisp" id="tDisp">24:00</span>
+    <button class="tbtn" id="tPlus">+</button>
+    <button class="tbtn" id="tPlay">▶</button>
+    <button class="tbtn" id="tReset">↺</button>
+  </div>
+</div>
+
+<!-- ══════ PART 1 ══════ -->
+<div class="view on" id="v1">
+  <div class="wide">
+    <h2 class="vt">16 Issues from the Diagnosis</h2>
+    <p class="vsub">Classified by pre-work responses into aligned and split. Click a card to open the deep dive.</p>
+    <div class="stats" id="p1stats"></div>
+    <div id="issueGrid"></div>
+  </div>
+</div>
+
+<!-- ══════ PART 2 ══════ -->
+<div class="view" id="v2">
+  <div class="wide">
+    <div class="qnav" id="qnav"></div>
+    <div class="dd">
+      <div class="ddleft">
+        <div class="panel">
+          <h3>Pre-work Distribution</h3>
+          <div class="distrow" id="distRow"></div>
+          <h3 style="margin-top:16px">Leadership Comments</h3>
+          <div class="opinions" id="opinList"></div>
+        </div>
+      </div>
+      <div class="ddright">
+        <div class="panel">
+          <div class="ddtitle" id="ddTitle"></div>
+          <div class="dddesc" id="ddDesc"></div>
+          <h3>① Agree on the Quadrant</h3>
+          <div class="qpick" id="qPick"></div>
+        </div>
+        <div class="panel">
+          <h3>② Root Cause — Why Tree</h3>
+          <div class="treewrap"><div class="tree" id="tree"></div></div>
+        </div>
+        <div class="panel">
+          <h3>③ Initiatives &amp; Owners</h3>
+          <table class="inits"><thead><tr>
+            <th style="width:38%">Initiative</th><th style="width:18%">Type</th>
+            <th style="width:14%">Timing</th><th style="width:22%">Owner</th><th style="width:8%"></th>
+          </tr></thead><tbody id="initBody"></tbody></table>
+          <button class="addb" id="addInit">+ Add initiative</button>
+        </div>
+        <div class="actbar">
+          <button class="nbtn" id="btnPrev">← Previous</button>
+          <div class="prog" id="ddProg"></div>
+          <span class="cloudind" id="cloudInd"></span>
+          <button class="nbtn" id="btnSaveNow">Save now</button>
+          <button class="nbtn primary" id="btnNext">Next issue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PART 3 ══════ -->
+<div class="view" id="v3">
+  <div class="wide">
+    <h2 class="vt">Initiatives Agreed</h2>
+    <p class="vsub">Action items agreed today, and issues carried forward for a deeper dive.</p>
+    <div class="stats" id="p3stats"></div>
+    <div class="panel">
+      <h3>Action Items</h3>
+      <table class="sumtable"><thead><tr>
+        <th style="width:5%">#</th><th style="width:28%">Initiative</th>
+        <th style="width:22%">Source Issue</th><th style="width:13%">Type</th>
+        <th style="width:11%">Timing</th><th style="width:21%">Owner</th>
+      </tr></thead><tbody id="sumBody"></tbody></table>
+    </div>
+    <div class="panel">
+      <h3>Carried Forward</h3>
+      <table class="sumtable"><thead><tr>
+        <th style="width:6%">#</th><th style="width:44%">Issue</th>
+        <th style="width:16%">Agreed Quadrant</th><th style="width:34%">Note</th>
+      </tr></thead><tbody id="laterBody"></tbody></table>
+    </div>
+    <div class="exportbar">
+      <button class="ebtn" id="expJson">Export (JSON)</button>
+      <button class="ebtn ghost" id="expCsv">Initiatives CSV</button>
+      <button class="ebtn ghost" id="loadJson">Import</button>
+      <input type="file" id="fileIn" accept=".json" style="display:none">
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════ ISSUES (same as pre-work) ══════════ */
+const ISSUES = [
+ {n:1,ax:"P1",sec:"Time Allocation",t:"Gap between recorded and perceived work hours",
+  d:"Members perceive a heavier workload than their recorded hours suggest. The gap appears across marketing, and its size differs by organization."},
+ {n:2,ax:"P1",sec:"Time Allocation",t:"Long working hours in some units",
+  d:"Working hours are markedly longer in certain units."},
+ {n:3,ax:"P1",sec:"Time Allocation",t:"Short working hours in some units (under 40h/week)",
+  d:"Some units record fewer than 40 hours per week. Whether this reflects workload distribution, the nature of the work, or recording accuracy needs a team-by-team review."},
+ {n:4,ax:"P1",sec:"Time Allocation",t:"Time absorbed by low-value work such as reporting and operations",
+  d:"Deck preparation and operational or administrative work take up a substantial share of total time, leaving less room for strategy and analysis."},
+ {n:5,ax:"P1",sec:"Time Allocation",t:"Insufficient people-management time for team leaders",
+  d:"Team leaders spend very little of their time managing and developing their members. Leaders too are absorbed by reporting and operational work."},
+ {n:6,ax:"P2",sec:"Work Priority Alignment",t:"Misalignment of work priorities between leaders and members",
+  d:"Leaders and members see the same work differently. They largely agree on what matters, but differ considerably on how demanding the work is."},
+ {n:7,ax:"P2",sec:"Work Priority Alignment",t:"Teams with extremely low work-priority alignment relative to the average",
+  d:"Teams whose alignment falls far below the average require a clear diagnosis and specific improvement actions."},
+ {n:8,ax:"P3",sec:"Org Effectiveness",t:"Formal processes that hinder rather than support the work",
+  d:"Reporting lines, approval steps and work processes get in the way of doing the work efficiently. This scored lowest among the six organizational-effectiveness dimensions."},
+ {n:9,ax:"P3",sec:"Org Effectiveness",t:"Organizational culture that does not motivate",
+  d:"The culture and everyday practices do not sustain motivation or energy. Decision-making style and communication norms were the main points raised."},
+ {n:10,ax:"P3",sec:"Org Effectiveness",t:"Frequent decision reversals",
+  d:"Decisions are made and then overturned, repeatedly. This appeared in open-ended responses from almost every division — the most widespread driver of lost motivation."},
+ {n:11,ax:"P3",sec:"Org Effectiveness",t:"Teams with org-effectiveness far below the average (where bottlenecks concentrate)",
+  d:"Organizational-effectiveness scores also vary widely by team, with bottlenecks concentrated in particular teams."},
+ {n:12,ax:"P4",sec:"Voice of Employee",t:"Complex approval and purchasing processes",
+  d:"Expense handling, purchasing procedures and multi-step approvals were raised repeatedly across organizations."},
+ {n:13,ax:"P4",sec:"Voice of Employee",t:"Unclear roles and responsibilities",
+  d:"Boundaries of roles and responsibilities between teams are not clear. The same work arrives through several routes, and standards differ by department."},
+ {n:14,ax:"P4",sec:"Voice of Employee",t:"Lack of onboarding",
+  d:"Onboarding and training for new joiners are insufficient. Gaps in industry and product understanding, and the absence of work manuals, were both raised."},
+ {n:15,ax:"P4",sec:"Voice of Employee",t:"Limited AI access, with time lost to repetitive work",
+  d:"Access to AI tools is restricted. Many noted that time still goes into repetitive work — data cleanup, first drafts of reports — that AI could handle."},
+ {n:16,ax:"P4",sec:"Voice of Employee",t:"Frequent meetings",
+  d:"There are many recurring and ad-hoc meetings, sometimes with overlapping attendees and agendas."}
+];
+
+const QUADS={
+  QW:{name:"QUICK WIN",desc:"High impact · Easy",color:"var(--qw)"},
+  MP:{name:"MAJOR PROJECT",desc:"High impact · Demanding",color:"var(--mp)"},
+  FI:{name:"FILL-IN",desc:"Low impact · Easy",color:"var(--fi)"},
+  RC:{name:"RECONSIDER",desc:"Low impact · Demanding",color:"var(--rc)"}
+};
+const TYPES=["AI Application","Elimination / Consolidation","R&R Realignment",
+             "Process Redesign","Org Structure Redesign"];
+const TIMING=["Quick Win (~90 days)","Mid-term (~6 months)","Long-term (12+ months)"];
+
+/* ══════════ PRE-WORK RESPONSES (paste consolidated data here) ══════════
+   Format: PRE[issueNo] = [{name:"Name", q:"QW|MP|FI|RC", memo:"one-line summary"}, ...]
+   ─ Currently holds the 2 completed responses. */
+const PRE = {
+ 1:[{name:"Sim Kyoseon",q:"FI",memo:"High work intensity inflates perceived hours. SI&I has 3-4 GHQ sessions a month that get counted as work."},
+    {name:"Wongi Ryu",q:"FI",memo:"Much work happens off-site — shooting, partner visits — and at home, none of which is captured in records."}],
+ 2:[{name:"Sim Kyoseon",q:"MP",memo:"Comparison across teams has a long-term negative effect. If driven by GHQ work or unplanned scope, a company-wide WoW change is needed — not easy."},
+    {name:"Wongi Ryu",q:"MP",memo:"Likely a headcount shortage. Reducing hours needs hiring, which will be hard. A deep dive is needed on whether the cause is the same across teams."}],
+ 3:[{name:"Sim Kyoseon",q:"FI",memo:"Easy to address — clear rewards and warnings for poor attendance. But the impact itself is not large."},
+    {name:"Wongi Ryu",q:"FI",memo:"Heavy workload but much of it is field or home work. Still, 40 hours is company policy, so I will communicate compliance clearly."}],
+ 4:[{name:"Sim Kyoseon",q:"MP",memo:"Not all reporting is low-value. Cross-team work requires context-setting, which inevitably lengthens the material."},
+    {name:"Wongi Ryu",q:"MP",memo:"These exist to support decisions. Aligning with leaders to cut non-essential reporting would lighten the load significantly."}],
+ 5:[{name:"Sim Kyoseon",q:"FI",memo:"The definition is unclear. Work is mostly learned by doing; building a culture of asking managers in the moment should come first."},
+    {name:"Wongi Ryu",q:"MP",memo:"Lean teams force leaders into hands-on execution — a structural limit. Continuous people-management training will be essential."}],
+ 6:[{name:"Sim Kyoseon",q:"MP",memo:"A natural gap when leader and member scopes differ. Treating all misalignment as bad is itself a mistake."},
+    {name:"Wongi Ryu",q:"QW",memo:"Little difficulty if leads communicate intent and context clearly. Where a gap exists, align expectations through 1:1s."}],
+ 7:[{name:"Sim Kyoseon",q:"MP",memo:"Same as above — a structural consequence of differing scopes."},
+    {name:"Wongi Ryu",q:"QW",memo:"A matter of communication frequency. Clear context, purpose and priority resolves it, and efficiency rises sharply."}],
+ 8:[{name:"Sim Kyoseon",q:"MP",memo:"Processes exist; the issue is how detailed and realistic they are. Repeated exceptions create confusion about what must be followed."},
+    {name:"Wongi Ryu",q:"MP",memo:"Senior leaders should make fewer, more critical decisions while junior levels handle the rest — this builds ownership and speed."}],
+ 9:[{name:"Sim Kyoseon",q:"MP",memo:"Motivation should be individually driven. Cultural change matters, but short and long term need separating."},
+    {name:"Wongi Ryu",q:"QW",memo:"Simple in concept, hard in practice: leaders state what they want, listen actively, and build trust even when views differ."}],
+ 10:[{name:"Sim Kyoseon",q:"RC",memo:"Need to check whether it is a final or interim decision. It lowers motivation but is unavoidable in business and hard to change."},
+    {name:"Wongi Ryu",q:"MP",memo:"It comes down to defining leaders' decision scope. A conversation about empowerment and trust — delegation naturally reduces reversals."}],
+ 11:[{name:"Sim Kyoseon",q:"MP",memo:"Lack of communication between team leads and senior managers, and unclear initiative purpose. Root cause is missing alignment across Team-MLT-MANCOM-Global."},
+    {name:"Wongi Ryu",q:"QW",memo:"Prioritising non-essential work is key. Clear R&R would also prevent excessive load landing on one team."}],
+ 12:[{name:"Sim Kyoseon",q:"RC",memo:"A compliance matter. The gap between those familiar with the process and those not is large. Changing internal procedure has clear limits."},
+    {name:"Wongi Ryu",q:"MP",memo:"Overhauling procurement won't be easy short term, but if we manage it, the operational gain would be massive."}],
+ 13:[{name:"Sim Kyoseon",q:"MP",memo:"Structures changed several times in recent years, sometimes without clear R&R being set up first."},
+    {name:"Wongi Ryu",q:"QW",memo:"A leadership-level issue. List the grey-area tasks, discuss with the relevant leaders, and refine R&Rs."}],
+ 14:[{name:"Sim Kyoseon",q:"FI",memo:"Induction is done well. But without background, input is hard to absorb. Regular team-level sessions would help more."},
+    {name:"Wongi Ryu",q:"QW",memo:"At my previous company onboarding ran a full week. If leaders and HR design structured training together, this is solvable."}],
+ 15:[{name:"Sim Kyoseon",q:"RC",memo:"Largely frustration at not having it. Copilot is partly available but usage is low. Training is needed, but not solvable right away."},
+    {name:"Wongi Ryu",q:"QW",memo:"AI is inevitable — falling behind risks irrelevance. Secure access and budget, and build a culture of safe usage through training."}],
+ 16:[{name:"Sim Kyoseon",q:"RC",memo:"Worth measuring how much is reporting-for-reporting. Leads and MLT need training to clarify meeting purpose and avoid repeats."},
+    {name:"Wongi Ryu",q:"MP",memo:"Judging what needs a meeting versus written comms is a leadership call. Cutting frequency will boost productivity, but defining 'unnecessary' takes effort."}]
+};
+
+/* ══════════ STATE ══════════ */
+const S = {
+  focus: 1,
+  consensus: {},      // n -> quadId
+  trees: {},          // n -> [{id,parent,text,core}]
+  inits: {},          // n -> [{text,type,timing,owner}]
+  status: {}          // n -> 'agree'|'split'|'later'
+};
+let uid = 1;
+
+/* ══════════ AUTOSAVE (browser local storage) ══════════ */
+const SKEY='mode_workshop_state_v1';
+let saveTimer=null, lastSave=null;
+function save(){
+  try{
+    localStorage.setItem(SKEY, JSON.stringify({...S, _uid:uid, _at:Date.now()}));
+    lastSave=new Date();
+    const el=document.getElementById('saveInd');
+    if(el){
+      el.textContent='Saved '+lastSave.toTimeString().slice(0,5);
+      el.classList.add('flash');
+      setTimeout(()=>el.classList.remove('flash'),600);
+    }
+  }catch(e){
+    const el=document.getElementById('saveInd');
+    if(el){ el.textContent='Save failed'; el.style.color='var(--red)'; }
+  }
+}
+function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(save,400); }
+function restore(){
+  try{
+    const raw=localStorage.getItem(SKEY);
+    if(!raw) return false;
+    const d=JSON.parse(raw);
+    S.focus=d.focus||1; S.consensus=d.consensus||{};
+    S.trees=d.trees||{}; S.inits=d.inits||{};
+    if(d.status) S.status=d.status;
+    uid=d._uid||100;
+    return d._at||true;
+  }catch(e){ return false; }
+}
+
+/* Auto-classify status from pre-work responses */
+function classify(n){
+  const r = PRE[n]||[];
+  if(!r.length) return 'later';
+  const c={}; r.forEach(x=>c[x.q]=(c[x.q]||0)+1);
+  const top = Math.max(...Object.values(c));
+  const ratio = top / r.length;
+  if(ratio >= 0.75) return 'agree';
+  return 'split';
+}
+ISSUES.forEach(i=>{ S.status[i.n] = classify(i.n); });
+
+/* ══════════ NAV ══════════ */
+document.querySelectorAll('.navtab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.navtab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById(b.dataset.view).classList.add('on');
+    if(b.dataset.view==='v3') renderP3();
+    if(b.dataset.view==='v1') renderP1();
+    window.scrollTo(0,0);
+  });
+});
+function goto(view){ document.querySelector(`.navtab[data-view=${view}]`).click(); }
+
+/* ══════════ TIMER ══════════ */
+let tSec=24*60, tOn=false, tInt=null;
+function tRender(){
+  const m=String(Math.floor(Math.abs(tSec)/60)).padStart(2,'0');
+  const s=String(Math.abs(tSec)%60).padStart(2,'0');
+  const d=document.getElementById('tDisp');
+  d.textContent=(tSec<0?'-':'')+m+':'+s;
+  d.classList.toggle('warn', tSec<=60);
+}
+document.getElementById('tPlay').addEventListener('click',e=>{
+  tOn=!tOn; e.target.textContent = tOn?'❚❚':'▶';
+  if(tOn){ tInt=setInterval(()=>{tSec--;tRender();},1000); }
+  else clearInterval(tInt);
+});
+document.getElementById('tReset').addEventListener('click',()=>{
+  tSec=24*60; tRender();
+});
+document.getElementById('tPlus').addEventListener('click',()=>{tSec+=60;tRender();});
+document.getElementById('tMinus').addEventListener('click',()=>{tSec-=60;tRender();});
+tRender();
+
+/* ══════════ PART 1 ══════════ */
+function renderP1(){
+  const cnt={agree:0,split:0,later:0};
+  ISSUES.forEach(i=>cnt[S.status[i.n]]++);
+  document.getElementById('p1stats').innerHTML =
+    `<div class="stat"><div class="sn">${cnt.agree}</div><div class="sl">Aligned — quick check</div></div>
+     <div class="stat"><div class="sn">${cnt.split}</div><div class="sl">Split — deep dive</div></div>
+     <div class="stat"><div class="sn">${16-Object.keys(S.consensus).length}</div><div class="sl">Remaining</div></div>
+     <div class="stat"><div class="sn">${Object.keys(S.consensus).length}</div><div class="sl">Quadrants agreed</div></div>`;
+
+  const byAx={};
+  ISSUES.forEach(i=>{ (byAx[i.ax]=byAx[i.ax]||[]).push(i); });
+  const AXN={P1:"Time Allocation",P2:"Work Priority Alignment",P3:"Org Effectiveness",P4:"Voice of Employee"};
+  const AXE={P1:"P1",P2:"P2",P3:"P3",P4:"P4"};
+
+  document.getElementById('issueGrid').innerHTML = Object.keys(byAx).map(ax=>`
+    <div class="axisrow">
+      <div class="axishead"><span class="ptag">${ax}</span>
+        <span class="axisname">${AXN[ax]}</span>
+        </div>
+      <div class="igrid">${byAx[ax].map(i=>icard(i)).join('')}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.icard').forEach(c=>{
+    c.addEventListener('click',()=>{ S.focus=+c.dataset.n; renderP2(); goto('v2'); });
+  });
+}
+function icard(i){
+  const r=PRE[i.n]||[];
+  const c={QW:0,MP:0,FI:0,RC:0}; r.forEach(x=>c[x.q]++);
+  const tot=r.length||1;
+  const bar=['QW','MP','FI','RC'].map(k=>
+    c[k]?`<i style="width:${c[k]/tot*100}%;background:${QUADS[k].color}"></i>`:'').join('');
+  const st=S.status[i.n];
+  const stl={agree:'Aligned',split:'Split',later:'No data'}[st];
+  const done=S.consensus[i.n];
+  return `<div class="icard ${S.focus===i.n?'focus':''}" data-n="${i.n}">
+    <span class="statechip st-${st}">${stl}</span>
+    <div class="inum">${String(i.n).padStart(2,'0')}</div>
+    <div class="ittl">${i.t}</div>
+    <div class="ibar">${bar||'<i style="width:100%;background:var(--panel3)"></i>'}</div>
+    <div class="imeta"><span>${r.length} responses</span>
+      <span>${done?QUADS[done].name:'—'}</span></div>
+  </div>`;
+}
+
+/* ══════════ PART 2 ══════════ */
+function renderP2(){
+  const n=S.focus, iss=ISSUES.find(x=>x.n===n);
+
+  document.getElementById('qnav').innerHTML = ISSUES.map(i=>
+    `<button class="qchip ${i.n===n?'on':''} ${S.consensus[i.n]?'done':''}" data-n="${i.n}">${i.n}</button>`).join('');
+  document.querySelectorAll('.qchip').forEach(b=>b.addEventListener('click',()=>{
+    S.focus=+b.dataset.n; queueSave(); renderP2(); window.scrollTo(0,0);
+  }));
+
+  document.getElementById('ddTitle').textContent = `${String(n).padStart(2,'0')}. ${iss.t}`;
+  document.getElementById('ddDesc').textContent = iss.d;
+
+  // distribution
+  const r=PRE[n]||[]; const c={QW:0,MP:0,FI:0,RC:0}; r.forEach(x=>c[x.q]++);
+  document.getElementById('distRow').innerHTML = ['QW','MP','FI','RC'].map(k=>
+    `<div class="dcell ${k.toLowerCase()}"><div class="dn">${c[k]}</div>
+     <div class="dl">${QUADS[k].name.split(' ')[0]}</div></div>`).join('');
+
+  document.getElementById('opinList').innerHTML = r.length ? r.map(o=>
+    `<div class="opin"><div class="oh"><span class="oname">${o.name}</span>
+      <span class="oq ${o.q}">${QUADS[o.q].name}</span></div>
+     <div class="otx">${o.memo}</div></div>`).join('')
+    : '<div class="empty">No responses yet</div>';
+
+  // consensus picker
+  document.getElementById('qPick').innerHTML = ['QW','MP','FI','RC'].map(k=>
+    `<button class="qp ${S.consensus[n]===k?'sel':''}" data-q="${k}">
+      <span class="qpn">${QUADS[k].name}</span>
+      <span class="qpd">${QUADS[k].desc}</span></button>`).join('');
+  document.querySelectorAll('.qp').forEach(b=>b.addEventListener('click',()=>{
+    S.consensus[n]=b.dataset.q; queueSave(); renderP2();
+  }));
+
+  renderTree(); renderInits();
+
+  // progress
+  const doneN=Object.keys(S.consensus).length;
+  const initN=Object.values(S.inits).reduce((a,v)=>a+(v||[]).filter(x=>x.text).length,0);
+  document.getElementById('ddProg').innerHTML =
+    `Issue <b>${n}</b> of 16　·　<b>${doneN}</b> agreed　·　<b>${initN}</b> initiatives`;
+  document.getElementById('btnPrev').disabled = (n<=1);
+  document.getElementById('btnNext').textContent = (n>=16) ? 'Go to wrap-up →' : 'Next issue →';
+}
+
+/* ── Why Tree ── */
+function tree(n){
+  if(!S.trees[n]) S.trees[n]=[{id:uid++,parent:null,text:ISSUES.find(x=>x.n===n).t,core:false}];
+  return S.trees[n];
+}
+function renderTree(){
+  const n=S.focus, nodes=tree(n);
+  // compute depth
+  const depth={}; nodes.forEach(x=>{
+    let d=0,p=x.parent;
+    while(p!==null){ d++; p=nodes.find(y=>y.id===p)?.parent ?? null; }
+    depth[x.id]=d;
+  });
+  const maxD=Math.max(...Object.values(depth));
+  let html='';
+  for(let d=0; d<=maxD; d++){
+    const col=nodes.filter(x=>depth[x.id]===d);
+    if(d>0) html+=`<div class="tconn"><svg preserveAspectRatio="none" viewBox="0 0 34 100">
+      <path d="M0 50 H12 M12 8 V92 M12 8 H34 M12 50 H34 M12 92 H34" stroke="#5A5A5A" stroke-width="1.5" fill="none"/></svg></div>`;
+    html+=`<div class="tcol">`+col.map(x=>{
+      const isRoot = x.parent===null;
+      return `<div class="tnode ${isRoot?'root':''} ${x.core?'core':''}" data-id="${x.id}">
+        <div class="ttx" contenteditable="true" data-id="${x.id}">${x.text}</div>
+        <div class="tacts">
+          <button class="tact add" data-id="${x.id}">+ Cause</button>
+          ${isRoot?'':`<button class="tact mark" data-id="${x.id}">${x.core?'★ Root':'Mark root'}</button>
+          <button class="tact del" data-id="${x.id}">Delete</button>`}
+        </div></div>`;
+    }).join('')+`</div>`;
+  }
+  document.getElementById('tree').innerHTML=html;
+
+  document.querySelectorAll('.tact.add').forEach(b=>b.addEventListener('click',()=>{
+    nodes.push({id:uid++,parent:+b.dataset.id,text:'Enter a cause',core:false}); queueSave(); renderTree();
+  }));
+  document.querySelectorAll('.tact.mark').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.dataset.id; const nd=nodes.find(x=>x.id===id);
+    nodes.forEach(x=>{ if(x.id!==id) x.core=false; });
+    nd.core=!nd.core; queueSave(); renderTree();
+  }));
+  document.querySelectorAll('.tact.del').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.dataset.id;
+    const rm=[id]; let changed=true;
+    while(changed){ changed=false;
+      nodes.forEach(x=>{ if(x.parent!==null&&rm.includes(x.parent)&&!rm.includes(x.id)){rm.push(x.id);changed=true;} });
+    }
+    S.trees[S.focus]=nodes.filter(x=>!rm.includes(x.id)); queueSave(); renderTree();
+  }));
+  document.querySelectorAll('.ttx').forEach(el=>{
+    el.addEventListener('blur',()=>{
+      const nd=nodes.find(x=>x.id===+el.dataset.id);
+      if(nd){ nd.text=el.textContent.trim()||'(empty)'; queueSave(); }
+    });
+    el.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();el.blur();} });
+  });
+}
+
+/* ── Initiatives ── */
+function renderInits(){
+  const n=S.focus;
+  if(!S.inits[n]) S.inits[n]=[];
+  const rows=S.inits[n];
+  document.getElementById('initBody').innerHTML = rows.length ? rows.map((r,i)=>`
+    <tr>
+      <td><input data-i="${i}" data-f="text" value="${r.text||''}" placeholder="Action item"></td>
+      <td><select data-i="${i}" data-f="type">
+        <option value="">Select</option>
+        ${TYPES.map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}
+      </select></td>
+      <td><select data-i="${i}" data-f="timing">
+        <option value="">Select</option>
+        ${TIMING.map(t=>`<option ${r.timing===t?'selected':''}>${t}</option>`).join('')}
+      </select></td>
+      <td><input data-i="${i}" data-f="owner" value="${r.owner||''}" placeholder="Owner"></td>
+      <td><button class="rmb" data-i="${i}">×</button></td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">None yet</td></tr>`;
+
+  document.querySelectorAll('#initBody input,#initBody select').forEach(el=>{
+    el.addEventListener('change',()=>{ rows[+el.dataset.i][el.dataset.f]=el.value; queueSave(); });
+    el.addEventListener('input',()=>{ rows[+el.dataset.i][el.dataset.f]=el.value; queueSave(); });
+  });
+  document.querySelectorAll('.rmb').forEach(b=>b.addEventListener('click',()=>{
+    rows.splice(+b.dataset.i,1); queueSave(); renderInits();
+  }));
+}
+document.getElementById('addInit').addEventListener('click',()=>{
+  const n=S.focus; if(!S.inits[n]) S.inits[n]=[];
+  S.inits[n].push({text:'',type:'',timing:'',owner:''}); queueSave(); renderInits();
+});
+
+/* ══════════ PART 3 ══════════ */
+function renderP3(){
+  const all=[];
+  ISSUES.forEach(i=>{ (S.inits[i.n]||[]).forEach(r=>{ if(r.text) all.push({...r,src:i}); }); });
+  const later=ISSUES.filter(i=>!S.consensus[i.n]);
+
+  document.getElementById('p3stats').innerHTML =
+    `<div class="stat"><div class="sn">${all.length}</div><div class="sl">Initiatives</div></div>
+     <div class="stat"><div class="sn">${Object.keys(S.consensus).length}</div><div class="sl">Quadrants agreed</div></div>
+     <div class="stat"><div class="sn">${all.filter(r=>r.owner).length}</div><div class="sl">Owners assigned</div></div>
+     <div class="stat"><div class="sn">${later.length}</div><div class="sl">Carried forward</div></div>`;
+
+  document.getElementById('sumBody').innerHTML = all.length ? all.map((r,i)=>`
+    <tr><td>${i+1}</td><td><b>${r.text}</b></td>
+    <td style="color:var(--dim);font-size:12px">${String(r.src.n).padStart(2,'0')}. ${r.src.t}</td>
+    <td>${r.type?`<span class="tagchip">${r.type}</span>`:'—'}</td>
+    <td style="font-size:12px">${r.timing||'—'}</td>
+    <td>${r.owner||'<span style="color:var(--red)">Unassigned</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty">No initiatives yet</td></tr>`;
+
+  document.getElementById('laterBody').innerHTML = later.length ? later.map((i,k)=>`
+    <tr><td>${k+1}</td><td>${String(i.n).padStart(2,'0')}. ${i.t}</td>
+    <td>${S.consensus[i.n]?QUADS[S.consensus[i.n]].name:'—'}</td>
+    <td style="color:var(--dim)">${S.status[i.n]==='later'?'No pre-work response':'Not yet discussed'}</td></tr>`).join('')
+    : `<tr><td colspan="4" class="empty">All issues addressed</td></tr>`;
+}
+
+/* ══════════ EXPORT ══════════ */
+document.getElementById('expJson').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`MODE_workshop_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+});
+document.getElementById('expCsv').addEventListener('click',()=>{
+  const rows=[['Issue No','Issue','Initiative','Type','Timing','Owner','Agreed Quadrant']];
+  ISSUES.forEach(i=>(S.inits[i.n]||[]).forEach(r=>{
+    if(r.text) rows.push([i.n,i.t,r.text,r.type||'',r.timing||'',r.owner||'',
+      S.consensus[i.n]?QUADS[S.consensus[i.n]].name:'']);
+  }));
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`MODE_initiatives_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+document.getElementById('loadJson').addEventListener('click',()=>document.getElementById('fileIn').click());
+document.getElementById('fileIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    const d=JSON.parse(rd.result);
+    Object.assign(S,d);
+    uid = Math.max(100, ...Object.values(S.trees||{}).flat().map(x=>x.id||0))+1;
+    save(); renderP1(); renderP2(); renderP3();
+    alert('Imported.');
+  }catch(err){ alert('Could not read the file.'); } };
+  rd.readAsText(f);
+});
+
+/* ══════════ GOOGLE SHEET SAVE ══════════ */
+/* Paste your Apps Script web app URL here */
+const SHEET_ENDPOINT = "PASTE_WORKSHOP_APPS_SCRIPT_URL_HERE";
+
+async function pushToSheet(silent){
+  const ind=document.getElementById('cloudInd');
+  if(!SHEET_ENDPOINT || SHEET_ENDPOINT.startsWith('PASTE')){
+    if(ind && !silent) ind.textContent='Sheet not connected';
+    return false;
+  }
+  if(ind) { ind.textContent='Saving to sheet...'; ind.className='cloudind'; }
+  const payload={
+    savedAt:new Date().toISOString(),
+    consensus:S.consensus,
+    trees:S.trees,
+    inits:S.inits,
+    issues:ISSUES.map(i=>({no:i.n,axis:i.ax,title:i.t}))
+  };
+  try{
+    await fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)});
+    if(ind){ ind.textContent='Sheet saved '+new Date().toTimeString().slice(0,5); ind.className='cloudind ok'; }
+    return true;
+  }catch(e){
+    if(ind){ ind.textContent='Sheet save failed'; ind.className='cloudind err'; }
+    return false;
+  }
+}
+
+/* ══════════ ISSUE NAVIGATION ══════════ */
+function moveTo(n){
+  if(n<1||n>16) return;
+  S.focus=n; queueSave(); renderP2(); window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('btnPrev').addEventListener('click',()=>moveTo(S.focus-1));
+document.getElementById('btnNext').addEventListener('click',async ()=>{
+  const b=document.getElementById('btnNext');
+  b.classList.add('saving'); b.textContent='Saving...';
+  save();
+  await pushToSheet(true);
+  b.classList.remove('saving'); b.textContent='Next issue →';
+  if(S.focus>=16){ renderP3(); goto('v3'); } else moveTo(S.focus+1);
+});
+document.getElementById('btnSaveNow').addEventListener('click',async ()=>{
+  const b=document.getElementById('btnSaveNow');
+  b.disabled=true; b.textContent='Saving...';
+  save();
+  await pushToSheet();
+  b.disabled=false; b.textContent='Save now';
+});
+
+/* ══════════ RESET ══════════ */
+document.getElementById('clearAll').addEventListener('click',()=>{
+  if(!confirm('This will clear all entries and start over.\nContinue?')) return;
+  localStorage.removeItem(SKEY);
+  S.focus=1; S.consensus={}; S.trees={}; S.inits={}; uid=1;
+  ISSUES.forEach(i=>{ S.status[i.n]=classify(i.n); });
+  document.getElementById('saveInd').textContent='Reset';
+  renderP1(); renderP2(); renderP3();
+});
+
+/* ══════════ UNLOAD WARNING ══════════ */
+window.addEventListener('beforeunload', e=>{
+  const has = Object.keys(S.consensus).length ||
+              Object.values(S.inits).some(a=>a && a.length) ||
+              Object.keys(S.trees).length;
+  if(has){ e.preventDefault(); e.returnValue=''; }
+});
+
+/* ══════════ INIT ══════════ */
+const restored = restore();
+renderP1(); renderP2();
+if(restored){
+  const t = typeof restored==='number' ? new Date(restored) : null;
+  document.getElementById('saveInd').textContent =
+    t ? 'Restored '+t.toTimeString().slice(0,5) : 'Restored';
+} else {
+  document.getElementById('saveInd').textContent='Autosave on';
+}
+setInterval(save, 30000);
+</script>
+</body>
+</html>
